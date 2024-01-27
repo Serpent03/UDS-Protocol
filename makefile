@@ -1,4 +1,4 @@
-sources = main.c UDS.c
+sources = main.c UDS.c queue.c
 cc = gcc
 ccflags = -Wall
 
