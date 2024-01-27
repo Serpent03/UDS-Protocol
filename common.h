@@ -1,39 +1,48 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 enum SID_CODES {
-  DIAGNOSTIC_SESS_CNTL = 0x10,
-  ECU_RESET = 0x11,
-  READ_DATA_BY_IDENT = 0x22,
-  READ_DATA_BY_ADDR = 0x23,
-  WRITE_DATA_BY_IDENT = 0x2E,
-  WRITE_DATA_TO_ADDR = 0x7D
+  SID_DIAGNOSTIC_SESS_CNTL = 0x10,
+  SID_ECU_RESET = 0x11,
+  SID_READ_DATA_BY_IDENT = 0x22,
+  SID_READ_DATA_BY_ADDR = 0x23,
+  SID_WRITE_DATA_BY_IDENT = 0x2E,
+  SID_WRITE_DATA_TO_ADDR = 0x7D
 };
 
 // enum SFB_CODES {
 //   // only for specific SID_CODES
 // };
 
-enum RESPONSE_CODES {
-  // other response codes could just be SID_CODES + 0x40
-  NEGATIVE_RESPONSE = 0x7F
-};
-
-enum UDS_PACKET_TYPE {
-  REQUEST,
-  POSRESP,
-  NEGRESP
+enum NEG_RESPONSE_CODES {
+  // positive response codes => requesting SID + 0x40
+  NRC_NEGATIVE_RESPONSE = 0x7F,
+  NRC_GENERAL_REJECTION = 0x10,
+  NRC_SUB_FUNCTION_NOT_SUPPLIED = 0x12,
+  NRC_INCORRECT_MESSAGE_LENGTH = 0x13,
+  NRC_BUSY_REPEAT_REQUEST = 0x21,
+  NRC_CONDITION_NOT_CORRECT = 0x22,
+  NRC_REQUEST_SEQUENCE_ERROR = 0x24,
+  NRC_REQUEST_OUT_OF_RANGE = 0x31,
+  NRC_SECURITY_ACCESS_DENIED = 0x33,
+  NRC_INVALID_KEY = 0x35
 };
 
 typedef struct UDS_Packet {
-  unsigned char param_1;
-  unsigned char param_2;
-  unsigned short int payload_1;
-  unsigned short int payload_2;
+  unsigned char SID;
+  unsigned char *data;
+  unsigned char dataLength;
 } UDS_Packet;
 
 
-UDS_Packet* generate_UDS_packet(enum UDS_PACKET_TYPE packetType, unsigned char param1, unsigned char param2, unsigned short int payload_1, unsigned short int payload_2);
+// TODO define a CAN packet encompassing the UDS packet. Is the CAN similar to TCP/IP in behavior for selecting destination?
+// TODO generate the parse function
+// TODO if feasible: ECU functions for simulation over a CAN network
+// TODO actual parse() function should be capable of receving a stream of bytes and reconstructing into UDS_Packet
+
+
+UDS_Packet* generate_UDS_packet(unsigned char SID, unsigned char *data, unsigned char dataLength);
 UDS_Packet* parse(UDS_Packet* udsp); // at the server end
 
 
