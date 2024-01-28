@@ -11,7 +11,11 @@ void generate_ISOTP_frames(UDS_Packet *udsp) {
   for (int i = 0; i < udsp->dataLength; i++) {
     enque(data_queue, udsp->data[i]);
   }
-  // TODO make consecutive ISOTP frames from the UDS packet. 
+  if (len_queue(data_queue) > 7) {
+    // follow the segmentation protocol
+  } else {
+    // single frame!
+  }
   free_queue(data_queue);
 }
 

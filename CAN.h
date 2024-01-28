@@ -27,3 +27,4 @@ typedef struct ISO_TP {
 } ISO_TP;
 
 CAN_Frame* generate_CAN_packet(enum CAN_FRAME_TYPE cft, UDS_Packet* udsp);
+void generate_ISOTP_frames(UDS_Packet *udsp);
