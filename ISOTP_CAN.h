@@ -36,19 +36,35 @@ enum defaultAddress {
 /** @todo utilize input and output buffer */
 
 /**
- * @brief Takes the data_queue and the dataLength, and returns a single CAN_TP frame.
- * @param data_queue the data_queue filled with the UDS packet data.
- * @param dataLength the length of the data_queue.
- * @return A CAN frame object.
+ * @brief Deallocates the allocated CAN-TP frame.
+ * @param cfr The CAN-TP frame to be deallocated.
+ * @return void.
  */
-CAN_Frame* single_CANTP_frame(queue* data_queue, uInt16 dataLength);
+void dealloc_CANTP_frame(CAN_Frame* cfr);
 
 /**
- * @brief Takes the data_queue and starts a subroutine for multiple CAN_TP frames.
+ * @brief Takes the data_queue and the dataLength, and returns a single CAN-TP frame.
  * @param data_queue the data_queue filled with the UDS packet data.
- * @return A CAN frame object.
+ * @param dataLength the length of the data_queue.
+ * @return A CAN-TP frame object.
  */
-CAN_Frame* multiple_CANTP_frame(queue* data_queue);
+CAN_Frame* CANTP_single_frame(queue* data_queue, uInt16 dataLength);
+
+/**
+ * @brief Generates the first CAN-TP frame for segmented UDS data.
+ * @param data_queue The queue filled with UDS packet data.
+ * @param dataLength Length of the total UDS packet data.
+ * @return A CAN-TP frame object.
+ */ 
+CAN_Frame* CANTP_first_frame(queue* data_queue, uInt16 dataLength);
+
+/**
+ * @brief Generates a consecutive CAN-TP frame after the CAN-TP first frame.
+ * @param data_queue The queue filled with UDS packet data.
+ * @param sequenceNum The sequence number for the currently transmitted frame.
+ * @return A CAN-TP frame object.
+ */
+CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum);
 
 /**
  * @brief This generates the CAN_ID + CAN_frames for the given UDS packet data.
