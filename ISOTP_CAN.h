@@ -33,11 +33,28 @@ enum defaultAddress {
   DEFAULT_RX_ADDR = 0x6789,
   DEFAULT_TX_ADDR = 0x1234,
 };
-// TODO set input and output buffer 
 
+/** @todo utilize input and output buffer */
+
+/**
+ * @brief Takes the data_queue and the dataLength, and returns a single CAN_TP frame.
+ * @param data_queue the data_queue filled with the UDS packet data.
+ * @param dataLength the length of the data_queue.
+ */
 CAN_Frame* single_CANTP_frame(queue* data_queue, uInt16 dataLength);
+/**
+ * @brief Takes the data_queue and starts a subroutine for multiple CAN_TP frames.
+ * @param data_queue the data_queue filled with the UDS packet data.
+ */
 CAN_Frame* multiple_CANTP_frame(queue* data_queue);
-
+/**
+ * @brief This generates the CAN_ID + CAN_frames for the given UDS packet data.
+ * @param udsp the required UDS packet.
+ */
 void generate_ISOTP_frames(UDS_Packet *udsp);
+/**
+ * @brief Initiates the routine for sending the ISO_TP frame(address + CAN_TP frame) to GPIO
+ * @param cfr The CAN_TP frame to send.
+ */
 void send_ISOTP_frames(CAN_Frame* cfr);
 

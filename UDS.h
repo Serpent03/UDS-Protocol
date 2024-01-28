@@ -33,5 +33,20 @@ typedef struct UDS_Packet {
   uInt8 dataLength;
 } UDS_Packet;
 
+
+/**
+ * @brief Generates a UDS packet.
+ * @param SID The required SID code for the operation.
+ * @param data Pointer to a uInt8 array containing relevant UDS data.
+ * @param dataLen Length of the array containing UDS data.
+ * @return void.
+ */
 UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt8 dataLength);
+
+/**
+ * @brief Parses a CANTP frame to construct a UDS packet.
+ * @param cfr The CANTP frame to reconstruct UDS data.
+ * @return An UDS packet.
+ * @todo Switch parse() to read from the IN_BUF array and construct as needed.
+ */
 UDS_Packet* parse(UDS_Packet* udsp); // at the server end

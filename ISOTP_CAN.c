@@ -2,6 +2,9 @@
 #include "ISOTP_CAN.h"
 #include "queue.h"
 
+uInt8 OUT_BUF[8];
+uInt8 IN_BUF[8];
+
 void generate_ISOTP_frames(UDS_Packet *udsp) {
   // put data inside a queue.
   // reference queue to this helper function
@@ -25,7 +28,7 @@ void generate_ISOTP_frames(UDS_Packet *udsp) {
       printf("DAT: 0x%02x\n", cfr->data[i]);
     }
     /*** 
-    * TODO 
+    * @todo 
     * every call after a CANTP_frame() utilizes a send_ISOTP_frames() call
     * all send_ISOTOP_frames() calls utiliz an input/output buffer, with the
     * buffer memory being changed directly through STM32 GPIO
