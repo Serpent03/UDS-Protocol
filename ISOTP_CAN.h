@@ -20,7 +20,6 @@ enum CAN_FRAME_TYPE {
 
 typedef struct CAN_Frame {
   // this can only be 8 bytes long everytime. Either segment or pad!
-  uInt8 *PCI;
   uInt8 *data;
 } CAN_Frame;
 
@@ -40,21 +39,29 @@ enum defaultAddress {
  * @brief Takes the data_queue and the dataLength, and returns a single CAN_TP frame.
  * @param data_queue the data_queue filled with the UDS packet data.
  * @param dataLength the length of the data_queue.
+ * @return A CAN frame object.
  */
 CAN_Frame* single_CANTP_frame(queue* data_queue, uInt16 dataLength);
+
 /**
  * @brief Takes the data_queue and starts a subroutine for multiple CAN_TP frames.
  * @param data_queue the data_queue filled with the UDS packet data.
+ * @return A CAN frame object.
  */
 CAN_Frame* multiple_CANTP_frame(queue* data_queue);
+
 /**
  * @brief This generates the CAN_ID + CAN_frames for the given UDS packet data.
  * @param udsp the required UDS packet.
+ * @todo use the entire ISO_TP header for proper addressing
+ * @return void.
  */
-void generate_ISOTP_frames(UDS_Packet *udsp);
+void send_ISOTP_frames(UDS_Packet *udsp);
+
 /**
  * @brief Initiates the routine for sending the ISO_TP frame(address + CAN_TP frame) to GPIO
  * @param cfr The CAN_TP frame to send.
+ * @return void.
  */
-void send_ISOTP_frames(CAN_Frame* cfr);
+void populate_output_buffer(CAN_Frame* cfr);
 
