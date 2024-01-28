@@ -33,6 +33,7 @@ enum defaultAddress {
   DEFAULT_RX_ADDR = 0x6789,
   DEFAULT_TX_ADDR = 0x1234,
 };
+// TODO set input and output buffer 
 
 CAN_Frame* single_CANTP_frame(queue* data_queue, uInt16 dataLength);
 CAN_Frame* multiple_CANTP_frame(queue* data_queue);

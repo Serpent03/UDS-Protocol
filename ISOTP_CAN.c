@@ -24,7 +24,12 @@ void generate_ISOTP_frames(UDS_Packet *udsp) {
     for (uInt16 i = 0; i < 7; i++) {
       printf("DAT: 0x%02x\n", cfr->data[i]);
     }
-    // TODO envelope the returned CAN_frame inside the ISOTP frame
+    /*** 
+    * TODO 
+    * every call after a CANTP_frame() utilizes a send_ISOTP_frames() call
+    * all send_ISOTOP_frames() calls utiliz an input/output buffer, with the
+    * buffer memory being changed directly through STM32 GPIO
+    * ***/
     // send_ISOTP_frames(cfr);
   }
   free_queue(data_queue);
