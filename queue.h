@@ -16,3 +16,4 @@ bool dequeue(queue *q);
 bool at_queue_front(queue *q, uInt8 *data);
 bool at_queue_rear(queue *q, uInt8 *data);
 void free_queue(queue *q);
+uInt16 len_queue(queue *q);
