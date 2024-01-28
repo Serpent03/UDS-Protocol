@@ -70,12 +70,13 @@ bool at_queue_rear(queue *q, uInt8 *data) {
 
 uInt16 len_queue(queue *q) {
   uInt16 size;
-  if (q->rear >= q->front) {
+  if (q->rear > q->front) {
     size = q->rear - q->front + 1;
   } else if (q->rear < q->front) {
-    size = q->rear + q->size - q->front + 1;
-  } 
+    size = (q->rear + q->size) - q->front + 1;
+  } else {
+    size = 0;
+  }
   return size;
 }
-
 
