@@ -45,10 +45,9 @@ typedef struct UDS_Packet {
 UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength);
 
 /**
- * @brief Parses a CANTP frame to construct a UDS packet.
- * @param cfr The CANTP frame to reconstruct UDS data.
- * @return An UDS packet.
+ * @brief Perform an operation on the UDS packet we have received.
+ * @param udsp The received UDS packet to perform an operation on.
+ * @return An UDS packet to be sent as a reply.
  * @todo switch to static memory.
- * @todo Switch parse() to read from the IN_BUF array and construct as needed.
  */
 UDS_Packet* parse(UDS_Packet* udsp); // at the server end
