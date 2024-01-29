@@ -4,6 +4,7 @@
 
 uInt8 OUT_BUF[8];
 uInt8 IN_BUF[8];
+bool IN_BUF_CHANGED = false;
 
 void populate_output_buffer(CAN_Frame *cfr) {
   /**
@@ -11,6 +12,7 @@ void populate_output_buffer(CAN_Frame *cfr) {
    * @todo integrate with the actual routine that deals with the GPIO 
    **/
   memcpy(OUT_BUF, cfr->data, 8);
+  memcpy(IN_BUF, OUT_BUF, 8);
 }
 
 void dealloc_CANTP_frame(CAN_Frame *cfr) {
@@ -49,7 +51,7 @@ void send_ISOTP_frames(UDS_Packet *udsp) {
      * that many frames and then return here, waiting for a
      * flow control frame agan.
      * @todo implement interrupts for incoming flow control frame
-    **/
+    */
 
     /* POST FLOW CONTROL FRAME */
     while (len_queue(data_queue) > 0) {
@@ -70,6 +72,9 @@ void send_ISOTP_frames(UDS_Packet *udsp) {
     **/
     cfr = CANTP_single_frame(data_queue, dataLength);
     populate_output_buffer(cfr);
+    for (uInt8 i = 0; i < 8; i++) {
+      printf("%s : 0x%02X\n", i == 0 ? "PCI" : "DAT", OUT_BUF[i]);
+    }
     dealloc_CANTP_frame(cfr);
   }
   free_queue(data_queue);
@@ -101,7 +106,7 @@ CAN_Frame* CANTP_first_frame(queue *data_queue, uInt16 dataLength) {
   uInt8 queue_data;
 
   /** @todo handle this more gracefully than an assert() call to prevent issue in ops */
-  assert(dataLength <= 0x1000); /* data must be equal or smaller than 12 bits: 4096 or 0x1000 */
+  assert(dataLength <= 0x1000); /* data must be <= 12 bits; 4096 or 0x1000 */
   uInt16 PCI = (CAN_CODE_FIRST_FRAME << 12) | (dataLength & 0xFFF);
   cfr->data[idx++] = ((PCI >> 8) & 0xFF);
   cfr->data[idx++] = (PCI & 0xFF);
@@ -129,7 +134,23 @@ CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum) {
   return cfr;
 }
 
-
+UDS_Packet receive_ISOTP_frames() {
+  UDS_Packet udsp;
+  /* First 4 bits of each IN_BUF to verify CAN-TP frame type */
+  if (IN_BUF[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
+    udsp.SID = IN_BUF[1];
+    udsp.dataLength = (IN_BUF[0] & 0xF) - 1;
+    udsp.data = (uInt8*)calloc(udsp.dataLength, sizeof(uInt8));
+    uInt8 idx = 0;
+    for (uInt8 i = 0; i < udsp.dataLength; i++) {
+      udsp.data[idx++] = IN_BUF[i+2];
+    }
+  } else {
+    /* Begin the routine for a segmented transmission */
+    
+  }
+  return udsp;
+}
 
 
 
