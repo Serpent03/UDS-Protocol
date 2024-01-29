@@ -4,14 +4,18 @@
 
 uInt8 OUT_BUF[8];
 uInt8 IN_BUF[8];
+FILE *fptr;
 
 void populate_output_buffer(CAN_Frame *cfr) {
   /**
    * For now, just simulate putting the values into the OUT_BUF
    * @todo integrate with the actual routine that deals with the GPIO 
+   * @todo utilize FILE streams to simulate GPIO
    **/
   memcpy(OUT_BUF, cfr->data, 8);
-  memcpy(IN_BUF, OUT_BUF, 8);
+  fptr = fopen("GPIO.txt", "a");
+  fwrite(OUT_BUF, sizeof(uInt8), 8, fptr);
+  fclose(fptr);
 }
 
 void dealloc_CANTP_frame(CAN_Frame *cfr) {
@@ -135,7 +139,12 @@ CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum) {
 
 UDS_Packet receive_ISOTP_frames() {
   UDS_Packet udsp;
-  /* First 4 bits of each IN_BUF to verify CAN-TP frame type */
+  /**
+   * @todo read from GPIO, but for now we simulate from FILE stream.
+   * INPUT_BUF firs gets updated here.
+   * First 4 bits of each IN_BUF to verify CAN-TP frame type.
+   */
+
   if (IN_BUF[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
     udsp.SID = IN_BUF[1];
     udsp.dataLength = (IN_BUF[0] & 0xF) - 1;
@@ -151,9 +160,9 @@ UDS_Packet receive_ISOTP_frames() {
      * Begin the routine for a segmented transmission 
      * First frame should be the CAN-TP First Frame
      * After that we enter a while loop and keep ingesting frames until we 
-     * have to send out a flow control frame
-     * @todo fix implementation.
-     * @todo Implement the flow control frame on the receiver end
+     * have to send out a flow control frame.
+     * INPUT_BUF then gets updated here, until we finish reading the message.
+     * @todo Implement the flow control frame on the receiver end.
      */
     udsp.SID = IN_BUF[2];
     udsp.dataLength = ((IN_BUF[0] & 0xF) << 12 | IN_BUF[1]);
