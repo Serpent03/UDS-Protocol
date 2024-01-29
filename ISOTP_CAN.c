@@ -5,6 +5,7 @@
 uInt8 OUT_BUF[8];
 uInt8 IN_BUF[8];
 uInt8 NULL_BUF[8] = { 0 };
+bool INPUT_HAS_CYCLED = true;
 FILE *fptr;
 
 void populate_output_buffer(CAN_Frame *cfr) {
@@ -14,8 +15,10 @@ void populate_output_buffer(CAN_Frame *cfr) {
    * @todo utilize FILE streams to simulate GPIO
    **/
   memcpy(OUT_BUF, cfr->data, 8);
-  fptr = fopen("GPIO.txt", "a");
-  // fwrite(OUT_BUF, sizeof(uInt8), 8, fptr);
+  fptr = fopen("GPIO.bin", "ab");
+  if (!INPUT_HAS_CYCLED) {
+    fwrite(OUT_BUF, sizeof(uInt8), 8, fptr);
+  }
   fclose(fptr);
 }
 
@@ -140,12 +143,11 @@ CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum) {
 
 bool receive_ISOTP_frames(UDS_Packet *udsp) {
   /**
-   * @todo read from GPIO, but for now we simulate from FILE stream.
-   * INPUT_BUF firs gets updated here.
+   * Simulate actual GPIO from FILE stream. INPUT_BUF first gets updated here.
    * First 4 bits of each IN_BUF to verify CAN-TP frame type.
    */
   
-  fptr = fopen("GPIO.txt", "r");
+  fptr = fopen("GPIO.bin", "rb");
   fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
 
   if (memcmp(IN_BUF, NULL_BUF, 8) == 0) {
@@ -153,15 +155,16 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
   }
 
   if (IN_BUF[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
-    udsp->dataLength = (IN_BUF[0] & 0xF) - 1;
-    udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
-    uInt8 offset = 2;
+    uInt8 offset = 2; /* The actual data maintains an offset from the start of packet. */
     uInt8 idx = 0;
 
-    for (uInt8 i = 0; i < udsp->dataLength; i++) {
-      udsp->data[idx++] = IN_BUF[i+offset];
-    }
     udsp->SID = IN_BUF[1];
+    udsp->dataLength = (IN_BUF[0] & 0xF) - 1;
+    udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
+
+    for (uInt8 i = 0; i < udsp->dataLength; i++) {
+      udsp->data[idx++] = IN_BUF[i + offset];
+    }
   } else if (IN_BUF[0] >> 4 == CAN_CODE_FIRST_FRAME){
     /** 
      * Begin the routine for a segmented transmission 
@@ -171,7 +174,31 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
      * INPUT_BUF then gets updated here, until we finish reading the message.
      * @todo Implement the flow control frame on the receiver end.
      */
+    uInt8 offset = 3;
+    uInt8 idx = 0;
+
+    udsp->SID = IN_BUF[2];
+    udsp->dataLength = ((IN_BUF[0] << 8) | IN_BUF[1]) & 0xFFF;
+    udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
+    /* FIRST FRAME */
+    for (uInt8 i = 0; i < 6; i++) {
+      udsp->data[idx++] = IN_BUF[i + offset];
+    }
+    /* CONSECUTIVE FRAMES */
+    offset = 1;
+    Int16 byte_num = udsp->dataLength; /* Remaining bytes of data */
+    while (byte_num > 0) {
+      fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr); /* Simulate INPUT pins */
+      uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
+      for (uInt8 i = 0; i < lim; i++) {
+        udsp->data[idx++] = IN_BUF[i + offset];
+      }
+      byte_num -= 7;
+    }
   } else {
+    /* We accept only frames that signify they are the starting of a segmented transmission. 
+     * I don't know if this behavior is realistic or not.
+     */
     fclose(fptr);
     return false;
   }

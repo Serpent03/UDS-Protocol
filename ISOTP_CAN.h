@@ -85,7 +85,6 @@ void send_ISOTP_frames(UDS_Packet *udsp);
 /**
  * @brief Take the incoming byte stream from the GPIO and convert it to a UDS packet.
  * @param udsp The UDS packet object for the data to be written to.
- * @todo Implement functions that convert a segmented byte stream transmission into a UDS packet.
  * @return True if the operation was successful.
  */
  bool receive_ISOTP_frames(UDS_Packet *udsp);
