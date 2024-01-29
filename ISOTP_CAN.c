@@ -4,6 +4,7 @@
 
 uInt8 OUT_BUF[8];
 uInt8 IN_BUF[8];
+uInt8 NULL_BUF[8] = { 0 };
 FILE *fptr;
 
 void populate_output_buffer(CAN_Frame *cfr) {
@@ -14,7 +15,7 @@ void populate_output_buffer(CAN_Frame *cfr) {
    **/
   memcpy(OUT_BUF, cfr->data, 8);
   fptr = fopen("GPIO.txt", "a");
-  fwrite(OUT_BUF, sizeof(uInt8), 8, fptr);
+  // fwrite(OUT_BUF, sizeof(uInt8), 8, fptr);
   fclose(fptr);
 }
 
@@ -137,24 +138,30 @@ CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum) {
   return cfr;
 }
 
-UDS_Packet receive_ISOTP_frames() {
-  UDS_Packet udsp;
+bool receive_ISOTP_frames(UDS_Packet *udsp) {
   /**
    * @todo read from GPIO, but for now we simulate from FILE stream.
    * INPUT_BUF firs gets updated here.
    * First 4 bits of each IN_BUF to verify CAN-TP frame type.
    */
+  
+  fptr = fopen("GPIO.txt", "r");
+  fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
+
+  if (memcmp(IN_BUF, NULL_BUF, 8) == 0) {
+    return false;
+  }
 
   if (IN_BUF[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
-    udsp.SID = IN_BUF[1];
-    udsp.dataLength = (IN_BUF[0] & 0xF) - 1;
-    udsp.data = (uInt8*)calloc(udsp.dataLength, sizeof(uInt8));
+    udsp->dataLength = (IN_BUF[0] & 0xF) - 1;
+    udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
     uInt8 offset = 2;
     uInt8 idx = 0;
 
-    for (uInt8 i = 0; i < udsp.dataLength; i++) {
-      udsp.data[idx++] = IN_BUF[i+offset];
+    for (uInt8 i = 0; i < udsp->dataLength; i++) {
+      udsp->data[idx++] = IN_BUF[i+offset];
     }
+    udsp->SID = IN_BUF[1];
   } else if (IN_BUF[0] >> 4 == CAN_CODE_FIRST_FRAME){
     /** 
      * Begin the routine for a segmented transmission 
@@ -164,18 +171,12 @@ UDS_Packet receive_ISOTP_frames() {
      * INPUT_BUF then gets updated here, until we finish reading the message.
      * @todo Implement the flow control frame on the receiver end.
      */
-    udsp.SID = IN_BUF[2];
-    udsp.dataLength = ((IN_BUF[0] & 0xF) << 12 | IN_BUF[1]);
-    udsp.data = (uInt8*)calloc(udsp.dataLength, sizeof(uInt8));
-    uInt8 offset = 3;
-    uInt16 idx = 0;
-
-    for (uInt16 i = 0; i < 8 - offset; i++) {
-      udsp.data[idx++] = IN_BUF[i + offset];
-    }
-
+  } else {
+    fclose(fptr);
+    return false;
   }
-  return udsp;
+  fclose(fptr);
+  return true;
 }
 
 
