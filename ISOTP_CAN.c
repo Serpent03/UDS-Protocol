@@ -4,7 +4,6 @@
 
 uInt8 OUT_BUF[8];
 uInt8 IN_BUF[8];
-bool IN_BUF_CHANGED = false;
 
 void populate_output_buffer(CAN_Frame *cfr) {
   /**
@@ -141,13 +140,31 @@ UDS_Packet receive_ISOTP_frames() {
     udsp.SID = IN_BUF[1];
     udsp.dataLength = (IN_BUF[0] & 0xF) - 1;
     udsp.data = (uInt8*)calloc(udsp.dataLength, sizeof(uInt8));
+    uInt8 offset = 2;
     uInt8 idx = 0;
+
     for (uInt8 i = 0; i < udsp.dataLength; i++) {
-      udsp.data[idx++] = IN_BUF[i+2];
+      udsp.data[idx++] = IN_BUF[i+offset];
     }
-  } else {
-    /* Begin the routine for a segmented transmission */
-    
+  } else if (IN_BUF[0] >> 4 == CAN_CODE_FIRST_FRAME){
+    /** 
+     * Begin the routine for a segmented transmission 
+     * First frame should be the CAN-TP First Frame
+     * After that we enter a while loop and keep ingesting frames until we 
+     * have to send out a flow control frame
+     * @todo fix implementation.
+     * @todo Implement the flow control frame on the receiver end
+     */
+    udsp.SID = IN_BUF[2];
+    udsp.dataLength = ((IN_BUF[0] & 0xF) << 12 | IN_BUF[1]);
+    udsp.data = (uInt8*)calloc(udsp.dataLength, sizeof(uInt8));
+    uInt8 offset = 3;
+    uInt16 idx = 0;
+
+    for (uInt16 i = 0; i < 8 - offset; i++) {
+      udsp.data[idx++] = IN_BUF[i + offset];
+    }
+
   }
   return udsp;
 }

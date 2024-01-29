@@ -1,7 +1,7 @@
 #include "common.h"
 #include "UDS.h"
 
-UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt8 dataLength) {
+UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength) {
   UDS_Packet  *udsp = (UDS_Packet*)calloc(1, sizeof(UDS_Packet));
   udsp->SID = SID;
   udsp->data = data;

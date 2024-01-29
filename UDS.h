@@ -30,7 +30,7 @@ enum NEG_RESPONSE_CODES {
 typedef struct UDS_Packet {
   uInt8 SID;
   uInt8 *data;
-  uInt8 dataLength;
+  uInt16 dataLength;
 } UDS_Packet;
 
 
@@ -42,7 +42,7 @@ typedef struct UDS_Packet {
  * @todo switch to static memory.
  * @return void.
  */
-UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt8 dataLength);
+UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength);
 
 /**
  * @brief Parses a CANTP frame to construct a UDS packet.
