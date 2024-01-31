@@ -1,6 +1,11 @@
 #include "common.h"
 #include "UDS.h"
 
+/**
+ * @todo Create a common UDS packet statically assigned memory.
+ * Pass all "new" generated UDS packet pointers to this memory location 
+ * WIll have to oversee a bit of mutex and all that, but it should work.
+ */
 UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength) {
   UDS_Packet  *udsp = (UDS_Packet*)calloc(1, sizeof(UDS_Packet));
   udsp->SID = SID;
