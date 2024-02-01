@@ -3,7 +3,7 @@
 #define QUEUE_H
 
 typedef struct queue { 
-  uInt8 *arr;
+  uInt8 arr[4096];
   Int16 front;
   Int16 rear;
   uInt16 size;
@@ -65,6 +65,7 @@ bool at_queue_rear(queue *q, uInt8 *data);
  * @brief Frees the queue data structure from the program memory.
  * @param q The queue to operate on.
  * @return void.
+ * @META Deprecated now.
  */
 void free_queue(queue *q);
 

@@ -1,5 +1,7 @@
 #include "queue.h"
 
+queue main_queue;
+
 bool queue_isfull(queue *q) {
   return (
     (q->front == 0 && q->rear == q->size - 1)
@@ -12,12 +14,10 @@ bool queue_isempty(queue *q) {
 }
 
 queue* init_queue(uInt16 size) {
-  queue *q = (queue*)calloc(1, sizeof(queue));
-  q->front = -1;
-  q->rear = -1;
-  q->size = size;
-  q->arr = (uInt8*)calloc(q->size, sizeof(uInt8));
-  return q;
+  main_queue.front = -1;
+  main_queue.rear = -1;
+  main_queue.size = size;
+  return &main_queue;
 }
 
 void free_queue(queue *q) {

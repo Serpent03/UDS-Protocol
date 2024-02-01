@@ -20,7 +20,7 @@ enum CAN_FRAME_TYPE {
 
 typedef struct CAN_Frame {
   // this can only be 8 bytes long everytime. Either segment or pad!
-  uInt8 *data;
+  uInt8 data[8];
 } CAN_Frame;
 
 typedef struct ISO_TP_Frame {
@@ -34,8 +34,6 @@ enum defaultAddress {
 };
 
 /** 
- * @todo utilize input and output buffer 
- * @todo add in packet decomposition from byte_stream
  * @todo IN_BUF triggers a flag to start receive stream
  * @todo define a ISO_TP frame enveloping the CAN_packet with the relevant CAN_ID
  */
@@ -44,6 +42,7 @@ enum defaultAddress {
  * @brief Deallocates the allocated CAN-TP frame.
  * @param cfr The CAN-TP frame to be deallocated.
  * @return void.
+ * @META This is deprecated now.
  */
 void dealloc_CANTP_frame(CAN_Frame* cfr);
 
@@ -51,28 +50,28 @@ void dealloc_CANTP_frame(CAN_Frame* cfr);
  * @brief Takes the data_queue and the dataLength, and returns a single CAN-TP frame.
  * @param data_queue the data_queue filled with the UDS packet data.
  * @param dataLength the length of the data_queue.
- * @todo switch to static memory.
- * @return A CAN-TP frame object.
+ * @param cfr The CAN-TP frame to perform the operation on.
+ * @return void.
  */
-CAN_Frame* CANTP_single_frame(queue* data_queue, uInt16 dataLength);
+void CANTP_single_frame(CAN_Frame *cfr, queue* data_queue, uInt16 dataLength);
 
 /**
  * @brief Generates the first CAN-TP frame for segmented UDS data.
  * @param data_queue The queue filled with UDS packet data.
  * @param dataLength Length of the total UDS packet data.
- * @todo switch to static memory.
- * @return A CAN-TP frame object.
+ * @param cfr The CAN-TP frame to perform the operation on.
+ * @return void.
  */ 
-CAN_Frame* CANTP_first_frame(queue* data_queue, uInt16 dataLength);
+void CANTP_first_frame(CAN_Frame *cfr, queue* data_queue, uInt16 dataLength);
 
 /**
  * @brief Generates a consecutive CAN-TP frame after the CAN-TP first frame.
  * @param data_queue The queue filled with UDS packet data.
  * @param sequenceNum The sequence number for the currently transmitted frame.
- * @todo switch to static memory.
- * @return A CAN-TP frame object.
+ * @param cfr The CAN-TP frame to perform the operation on.
+ * @return void.
  */
-CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum);
+void CANTP_consec_frame(CAN_Frame *cfr, queue* data_queue, uInt8 sequenceNum);
 
 /**
  * @brief This generates the CAN_ID + CAN_frames for the given UDS packet data.

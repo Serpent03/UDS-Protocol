@@ -29,7 +29,7 @@ enum NEG_RESPONSE_CODES {
 
 typedef struct UDS_Packet {
   uInt8 SID;
-  uInt8 *data;
+  uInt8 data[4096];
   uInt16 dataLength;
 } UDS_Packet;
 
@@ -39,7 +39,6 @@ typedef struct UDS_Packet {
  * @param SID The required SID code for the operation.
  * @param data Pointer to a uInt8 array containing relevant UDS data.
  * @param dataLen Length of the array containing UDS data.
- * @todo switch to static memory.
  * @return void.
  */
 UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength);
@@ -48,6 +47,5 @@ UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength);
  * @brief Perform an operation on the UDS packet we have received.
  * @param udsp The received UDS packet to perform an operation on.
  * @return An UDS packet to be sent as a reply.
- * @todo switch to static memory.
  */
 UDS_Packet* parse(UDS_Packet* udsp); // at the server end

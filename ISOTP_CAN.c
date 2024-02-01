@@ -12,14 +12,13 @@ void populate_output_buffer(CAN_Frame *cfr) {
   /**
    * For now, just simulate putting the values into the OUT_BUF
    * @todo integrate with the actual routine that deals with the GPIO 
-   * @todo utilize FILE streams to simulate GPIO
    **/
   memcpy(OUT_BUF, cfr->data, 8);
-  fptr = fopen("GPIO.bin", "ab");
   if (!INPUT_HAS_CYCLED) {
+    fptr = fopen("GPIO.bin", "ab");
     fwrite(OUT_BUF, sizeof(uInt8), 8, fptr);
+    fclose(fptr);
   }
-  fclose(fptr);
 }
 
 void dealloc_CANTP_frame(CAN_Frame *cfr) {
@@ -39,16 +38,16 @@ void send_ISOTP_frames(UDS_Packet *udsp) {
   uInt8 sequence = 1;
 
   uInt16 dataLength = len_queue(data_queue);
-  CAN_Frame* cfr;
+  CAN_Frame cfr;
+
   if (dataLength > 7) {
     /* Each calloc'd CAN_Frame* must be freed after we finish writing data into the OUT_BUF */
     /* First frame in the segmented transmission */
-    cfr = CANTP_first_frame(data_queue, dataLength);
-    populate_output_buffer(cfr);
+    CANTP_first_frame(&cfr, data_queue, dataLength);
+    populate_output_buffer(&cfr);
     for (uInt8 i = 0; i < 8; i++) {
       printf("%s : 0x%02X\n", i == 0 ? "PCI" : "DAT", OUT_BUF[i]);
     }
-    dealloc_CANTP_frame(cfr);
     /** PRE FLOW CONTROL FRAME
 
      * wait here until we receive the flow control frame 
@@ -63,33 +62,22 @@ void send_ISOTP_frames(UDS_Packet *udsp) {
     /* POST FLOW CONTROL FRAME */
     while (len_queue(data_queue) > 0) {
       printf("\nDLEN: %d\n", len_queue(data_queue));
-      cfr = CANTP_consec_frame(data_queue, sequence++);
-      populate_output_buffer(cfr);
+      CANTP_consec_frame(&cfr, data_queue, sequence++);
+      populate_output_buffer(&cfr);
       for (uInt8 i = 0; i < 8; i++) {
         printf("%s : 0x%02X\n", i == 0 ? "PCI" : "DAT", OUT_BUF[i]);
       }
-      dealloc_CANTP_frame(cfr);
     }
   } else {
-    /** 
-     * @todo 
-     * every call after a CANTP_frame() utilizes a send_ISOTP_frames() call
-     * all send_ISOTOP_frames() calls utiliz an input/output buffer, with the
-     * buffer memory being changed directly through STM32 GPIO
-    **/
-    cfr = CANTP_single_frame(data_queue, dataLength);
-    populate_output_buffer(cfr);
+    CANTP_single_frame(&cfr, data_queue, dataLength);
+    populate_output_buffer(&cfr);
     for (uInt8 i = 0; i < 8; i++) {
       printf("%s : 0x%02X\n", i == 0 ? "PCI" : "DAT", OUT_BUF[i]);
     }
-    dealloc_CANTP_frame(cfr);
   }
-  free_queue(data_queue);
 }
 
-CAN_Frame* CANTP_single_frame(queue* data_queue, uInt16 dataLength) {
-  CAN_Frame *cfr = (CAN_Frame*)calloc(1, sizeof(CAN_Frame));
-  cfr->data = (uInt8*)calloc(8, sizeof(uInt8));
+void CANTP_single_frame(CAN_Frame *cfr, queue* data_queue, uInt16 dataLength) {
   uInt8 idx = 0;
   uInt8 queue_data;
   cfr->data[idx++] = (CAN_CODE_SINGLE_FRAME << 4) | (dataLength & 0xF);
@@ -103,12 +91,9 @@ CAN_Frame* CANTP_single_frame(queue* data_queue, uInt16 dataLength) {
     cfr->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
-  return cfr;
 }
 
-CAN_Frame* CANTP_first_frame(queue *data_queue, uInt16 dataLength) {
-  CAN_Frame *cfr = (CAN_Frame*)calloc(1, sizeof(CAN_Frame));
-  cfr->data = (uInt8*)calloc(8, sizeof(uInt8));
+void CANTP_first_frame(CAN_Frame *cfr, queue *data_queue, uInt16 dataLength) {
   uInt8 idx = 0;
   uInt8 queue_data;
 
@@ -123,12 +108,9 @@ CAN_Frame* CANTP_first_frame(queue *data_queue, uInt16 dataLength) {
     cfr->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
-  return cfr;
 }
 
-CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum) {
-  CAN_Frame* cfr = (CAN_Frame*)calloc(1, sizeof(CAN_Frame));
-  cfr->data = (uInt8*)calloc(8, sizeof(uInt8));
+void CANTP_consec_frame(CAN_Frame *cfr, queue* data_queue, uInt8 sequenceNum) {
   uInt8 idx = 0;
   uInt8 queue_data;
   cfr->data[idx++] = (CAN_CODE_CONSEC_FRAME << 4) | (sequenceNum % 0xF);
@@ -138,7 +120,6 @@ CAN_Frame* CANTP_consec_frame(queue* data_queue, uInt8 sequenceNum) {
     cfr->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
-  return cfr;
 }
 
 bool receive_ISOTP_frames(UDS_Packet *udsp) {
@@ -148,8 +129,10 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
    */
   
   fptr = fopen("GPIO.bin", "rb");
+  if (fptr == NULL) {
+    return false;
+  }
   fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
-
   if (memcmp(IN_BUF, NULL_BUF, 8) == 0) {
     return false;
   }
@@ -160,7 +143,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
 
     udsp->SID = IN_BUF[1];
     udsp->dataLength = (IN_BUF[0] & 0xF) - 1;
-    udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
+    // udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
 
     for (uInt8 i = 0; i < udsp->dataLength; i++) {
       udsp->data[idx++] = IN_BUF[i + offset];
@@ -179,7 +162,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
 
     udsp->SID = IN_BUF[2];
     udsp->dataLength = ((IN_BUF[0] << 8) | IN_BUF[1]) & 0xFFF;
-    udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
+    // udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
     /* FIRST FRAME */
     for (uInt8 i = 0; i < 6; i++) {
       udsp->data[idx++] = IN_BUF[i + offset];
