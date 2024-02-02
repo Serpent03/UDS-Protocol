@@ -32,6 +32,10 @@ enum ISO_TP_CODES {
   DEFAULT_DLC = 0x8
 };
 
+enum ISO_TP_TIME_LIMITS {
+  TIMEOUT = 500
+};
+
 /** 
  * @todo IN_BUF triggers a flag to start receive stream
  * @todo create a server loop mechanism for ECU states
@@ -72,7 +76,14 @@ void CANTP_first_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength)
  */
 void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt8 sequenceNum);
 
-void CANTP_flow_control_frame(ISO_TP_Frame *cfr);
+
+/**
+ * @brief Sets the flow control mechanism variables(BS, STmin) for outgoing transmissions.
+ * @returns True if successful.
+ */
+bool CANTP_read_flow_control_frame();
+
+void CANTP_write_flow_control_frame();
 
 /**
  * @brief This generates the CAN_ID + ISO-TP frames for the given UDS packet data.

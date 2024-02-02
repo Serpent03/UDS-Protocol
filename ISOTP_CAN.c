@@ -6,10 +6,18 @@ uInt8 NULL_BUF[10] = { 0 };
 uInt8 OUT_BUF[10];
 uInt8 IN_BUF[10];
 uInt8 *CAN_DATA = &IN_BUF[2];
+/* The first two bytes from input will be the address + DLC. We only care about the CAN data transmitted,
+ * so we will refer to it using a pointer located on the third byte of the input buffer */
 
 bool INPUT_HAS_CYCLED = true;
 FILE *fptr;
 
+ISO_TP_Frame ITFR_TX;
+ISO_TP_Frame ITFR_FC; /* I think I can probably do without this, will have to see. */
+
+uInt8 block_size = -1;
+uInt8 STmin = -1;
+bool FC_INIT = false;
 
 void print_OUTBUF() {
   printf("ADDR: 0x%02X\n", (uInt16)((OUT_BUF[0] << 8) | OUT_BUF[1]) >> 5);
@@ -28,7 +36,7 @@ void populate_output_buffer(ISO_TP_Frame *ITFR) {
   OUT_BUF[1] = (ITFR->addr);
   memcpy(&OUT_BUF[2], ITFR->data, 8);
   if (!INPUT_HAS_CYCLED) {
-    fptr = fopen("GPIO.bin", "ab");
+    fptr = fopen("GPO.bin", "ab");
     fwrite(OUT_BUF, sizeof(uInt8), 10, fptr);
     fclose(fptr);
   }
@@ -41,13 +49,10 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
     enque(data_queue, udsp->data[i]);
   }
 
-  uInt8 block_size;
-  uInt8 STmin;
   uInt8 sequence = 1;
 
   uInt16 dataLength = len_queue(data_queue);
-  ISO_TP_Frame ITFR;
-  ITFR.addr = ((rx_addr << 5) | DEFAULT_DLC);
+  ITFR_TX.addr = ((rx_addr << 5) | DEFAULT_DLC);
   /* 
    * The address is 11-bits. Assuming last 5 bits can be used 
    * for the DLC setting by some bit-shifting magic. 
@@ -55,8 +60,8 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
 
   if (dataLength > 7) {
     /* First frame in the segmented transmission */
-    CANTP_first_frame(&ITFR, data_queue, dataLength);
-    populate_output_buffer(&ITFR);
+    CANTP_first_frame(&ITFR_TX, data_queue, dataLength);
+    populate_output_buffer(&ITFR_TX);
     print_OUTBUF();
     /** PRE FLOW CONTROL FRAME
 
@@ -69,16 +74,31 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
      * @todo implement interrupts for incoming flow control frame
     */
 
+    /* Set up the STMin, BS params through GPI.bin */
+    while (!FC_INIT) {
+      FC_INIT = CANTP_read_flow_control_frame();
+      FC_INIT = true;
+      /** @todo Add in time-out abort waiting for FC-frame */
+    }
+
     /* POST FLOW CONTROL FRAME */
     while (len_queue(data_queue) > 0) {
+      if (FC_INIT && block_size > 0) {
+        /* This should only trigger if we've initialized BS > 0 */
+        block_size--;
+        FC_INIT = block_size > 0;
+      }
+      while (!FC_INIT) {
+        FC_INIT = CANTP_read_flow_control_frame();
+      }
       printf("\nDLEN: %d\n", len_queue(data_queue));
-      CANTP_consec_frame(&ITFR, data_queue, sequence++);
-      populate_output_buffer(&ITFR);
+      CANTP_consec_frame(&ITFR_TX, data_queue, sequence++);
+      populate_output_buffer(&ITFR_TX);
       print_OUTBUF();
     }
   } else {
-    CANTP_single_frame(&ITFR, data_queue, dataLength);
-    populate_output_buffer(&ITFR);
+    CANTP_single_frame(&ITFR_TX, data_queue, dataLength);
+    populate_output_buffer(&ITFR_TX);
 
     print_OUTBUF();
   }
@@ -129,13 +149,34 @@ void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt8 sequenceNum
   }
 }
 
+bool CANTP_read_flow_control_frame() {
+  /* Read the FC params - STMin and BS. */
+  printf("\nFLOW CONTROL FRAME\n");
+  fptr = fopen("GPI.bin", "rb");
+  if (fptr == NULL) {
+    return false;
+  }
+  fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
+
+  if (memcmp(IN_BUF, NULL_BUF, 10) == 0) {
+    return false;
+  } else if ((CAN_DATA[0] >> 4) != CAN_CODE_FLOW_CNTL_FRAME) {
+    return false;
+  }
+
+  block_size = CAN_DATA[1];
+  STmin = CAN_DATA[2];
+
+  return true;
+}
+
 bool receive_ISOTP_frames(UDS_Packet *udsp) {
   /**
    * Simulate actual GPIO from FILE stream. INPUT_BUF first gets updated here.
    * First 4 bits of each IN_BUF to verify CAN-TP frame type.
    */
   
-  fptr = fopen("GPIO.bin", "rb");
+  fptr = fopen("GPI.bin", "rb");
   if (fptr == NULL) {
     return false;
   }
