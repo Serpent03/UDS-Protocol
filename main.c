@@ -3,9 +3,9 @@
 #include "queue.h"
 
 int main() {
-  uInt8 data[] = {0, 2, 51, 23, 1, 15, 2, 24, 241, 12, 1, 8, 16, 16, 16};
+  uInt8 data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
-  send_ISOTP_frames(tx);
+  send_ISOTP_frames(tx, DEFAULT_RX_ADDR);
 
   UDS_Packet rx;
   bool opSuccess = receive_ISOTP_frames(&rx);

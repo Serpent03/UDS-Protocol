@@ -9,7 +9,7 @@ UDS_Packet uds_tx;
 uInt8 resp_data[4096];
 
 /**
- * @todo Re-initialize the statically allocated memory.
+ * @todo Re-initialize the statically allocated memory if needed.
  */
 
 UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength) {

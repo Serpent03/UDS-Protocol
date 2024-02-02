@@ -1,3 +1,4 @@
+#pragma once 
 #include "common.h"
 
 enum SID_CODES {
@@ -9,9 +10,14 @@ enum SID_CODES {
   SID_WRITE_DATA_TO_ADDR = 0x7D
 };
 
-// enum SFB_CODES {
-//   // only for specific SID_CODES
-// };
+enum SFB_CODES {
+  SFB_TESTER_PRESENT = 0x00,
+  SFB_READ_DTC_INFORMATION = 0x02,
+  SFB_ECU_RESET = 0x01,
+  SFB_LINK_CNTL_1 = 0x01,
+  SFB_LINK_CNTL_2 = 0x02,
+  SFB_LINK_CNTL_3 = 0x03,
+};
 
 enum NEG_RESPONSE_CODES {
   // positive response codes => requesting SID + 0x40
@@ -24,7 +30,9 @@ enum NEG_RESPONSE_CODES {
   NRC_REQUEST_SEQUENCE_ERROR = 0x24,
   NRC_REQUEST_OUT_OF_RANGE = 0x31,
   NRC_SECURITY_ACCESS_DENIED = 0x33,
-  NRC_INVALID_KEY = 0x35
+  NRC_INVALID_KEY = 0x35,
+  NRC_ENGINE_RUNNING = 0x83,
+  NRC_SPEED_TOO_HIGH = 0x88
 };
 
 typedef struct UDS_Packet {
@@ -33,6 +41,8 @@ typedef struct UDS_Packet {
   uInt16 dataLength;
 } UDS_Packet;
 
+extern UDS_Packet uds_tx;
+extern uInt8 resp_data[4096];
 
 /**
  * @brief Generates a UDS packet.
