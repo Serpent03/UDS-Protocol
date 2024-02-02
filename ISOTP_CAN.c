@@ -35,11 +35,12 @@ void populate_output_buffer(ISO_TP_Frame *ITFR) {
   OUT_BUF[0] = (ITFR->addr >> 8);
   OUT_BUF[1] = (ITFR->addr);
   memcpy(&OUT_BUF[2], ITFR->data, 8);
-  if (!INPUT_HAS_CYCLED) {
-    fptr = fopen("GPO.bin", "ab");
-    fwrite(OUT_BUF, sizeof(uInt8), 10, fptr);
-    fclose(fptr);
+  fptr = fopen("GPO.bin", "ab");
+  if (fptr != NULL) {
+    fptr = fopen("GPO.bin", "w");
   }
+  fwrite(OUT_BUF, sizeof(uInt8), 10, fptr);
+  fclose(fptr);
 }
 
 void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
@@ -59,19 +60,19 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
    */
 
   if (dataLength > 7) {
-    /* First frame in the segmented transmission */
+    /* First frame in the segmented transmission. */
+
     CANTP_first_frame(&ITFR_TX, data_queue, dataLength);
     populate_output_buffer(&ITFR_TX);
     print_OUTBUF();
-    /** PRE FLOW CONTROL FRAME
 
+    /*
      * wait here until we receive the flow control frame 
      * flow control frame sets the block_size and STmin params, which control
      * how often we send the frame and how many in one go
      * if block_size has been init to anything other than 0, we tx
      * that many frames and then return here, waiting for a
      * flow control frame agan.
-     * @todo implement interrupts for incoming flow control frame
     */
 
     /* Set up the STMin, BS params through GPI.bin */
@@ -84,7 +85,8 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
     /* POST FLOW CONTROL FRAME */
     while (len_queue(data_queue) > 0) {
       if (FC_INIT && block_size > 0) {
-        /* This should only trigger if we've initialized BS > 0 */
+        /* This should decrement BS if we're not on unlimited block-sizes(BS = 0), i.e 
+         * sending blocks until our data is all sent. */
         block_size--;
         FC_INIT = block_size > 0;
       }
@@ -94,6 +96,7 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
       printf("\nDLEN: %d\n", len_queue(data_queue));
       CANTP_consec_frame(&ITFR_TX, data_queue, sequence++);
       populate_output_buffer(&ITFR_TX);
+
       print_OUTBUF();
     }
   } else {
