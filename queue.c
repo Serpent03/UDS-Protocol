@@ -20,11 +20,6 @@ queue* init_queue(uInt16 size) {
   return &main_queue;
 }
 
-void free_queue(queue *q) {
-  free(q->arr);
-  free(q);
-}
-
 bool enque(queue *q, uInt8 data) {
   if (!queue_isfull(q)) {
     q->rear = (q->rear + 1) % q->size;

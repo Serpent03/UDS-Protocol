@@ -1,6 +1,6 @@
+#pragma once
+
 #include "common.h"
-#ifndef QUEUE_H
-#define QUEUE_H
 
 typedef struct queue { 
   uInt8 arr[4096];
@@ -61,13 +61,13 @@ bool at_queue_front(queue *q, uInt8 *data);
  */
 bool at_queue_rear(queue *q, uInt8 *data);
 
-/**
- * @brief Frees the queue data structure from the program memory.
- * @param q The queue to operate on.
- * @return void.
- * @META Deprecated now.
- */
-void free_queue(queue *q);
+// /**
+//  * @brief Frees the queue data structure from the program memory.
+//  * @param q The queue to operate on.
+//  * @return void.
+//  * @META Deprecated now.
+//  */
+// void free_queue(queue *q);
 
 /**
  * @brief Returns a 16-bit unsigned integer containing the length of the queue.
@@ -75,7 +75,5 @@ void free_queue(queue *q);
  * @return uInt16 variable containing the length of the queue.
  */
 uInt16 len_queue(queue *q);
-
-#endif // !QUEUE_H
 
 
