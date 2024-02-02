@@ -2,31 +2,39 @@
 #include "ISOTP_CAN.h"
 #include "queue.h"
 
-uInt8 OUT_BUF[8];
-uInt8 IN_BUF[8];
-uInt8 NULL_BUF[8] = { 0 };
+uInt8 NULL_BUF[10] = { 0 };
+uInt8 OUT_BUF[10];
+uInt8 IN_BUF[10];
+uInt8 *CAN_DATA = &IN_BUF[2];
+
 bool INPUT_HAS_CYCLED = true;
 FILE *fptr;
 
-void populate_output_buffer(CAN_Frame *cfr) {
+
+void print_OUTBUF() {
+  printf("ADDR: 0x%02X\n", (uInt16)((OUT_BUF[0] << 8) | OUT_BUF[1]) >> 5);
+  printf("_DLC: 0x%03X\n", OUT_BUF[1] & 0xF);
+  for (uInt8 i = 2; i < 10; i++) {
+    printf("%s : 0x%02X\n", i == 2 ? "PCI" : "DAT", OUT_BUF[i]);
+  }
+}
+
+void populate_output_buffer(ISO_TP_Frame *ITFR) {
   /**
    * For now, just simulate putting the values into the OUT_BUF
    * @todo integrate with the actual routine that deals with the GPIO 
    **/
-  memcpy(OUT_BUF, cfr->data, 8);
+  OUT_BUF[0] = (ITFR->addr >> 8);
+  OUT_BUF[1] = (ITFR->addr);
+  memcpy(&OUT_BUF[2], ITFR->data, 8);
   if (!INPUT_HAS_CYCLED) {
     fptr = fopen("GPIO.bin", "ab");
-    fwrite(OUT_BUF, sizeof(uInt8), 8, fptr);
+    fwrite(OUT_BUF, sizeof(uInt8), 10, fptr);
     fclose(fptr);
   }
 }
 
-void dealloc_CANTP_frame(CAN_Frame *cfr) {
-  free(cfr->data);
-  free(cfr);
-}
-
-void send_ISOTP_frames(UDS_Packet *udsp) {
+void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
   queue *data_queue = init_queue(udsp->dataLength + 1);
   enque(data_queue, udsp->SID);
   for (uInt16 i = 0; i < udsp->dataLength; i++) {
@@ -38,16 +46,18 @@ void send_ISOTP_frames(UDS_Packet *udsp) {
   uInt8 sequence = 1;
 
   uInt16 dataLength = len_queue(data_queue);
-  CAN_Frame cfr;
+  ISO_TP_Frame ITFR;
+  ITFR.addr = ((rx_addr << 5) | DEFAULT_DLC);
+  /* 
+   * The address is 11-bits. Assuming last 5 bits can be used 
+   * for the DLC setting by some bit-shifting magic. 
+   */
 
   if (dataLength > 7) {
-    /* Each calloc'd CAN_Frame* must be freed after we finish writing data into the OUT_BUF */
     /* First frame in the segmented transmission */
-    CANTP_first_frame(&cfr, data_queue, dataLength);
-    populate_output_buffer(&cfr);
-    for (uInt8 i = 0; i < 8; i++) {
-      printf("%s : 0x%02X\n", i == 0 ? "PCI" : "DAT", OUT_BUF[i]);
-    }
+    CANTP_first_frame(&ITFR, data_queue, dataLength);
+    populate_output_buffer(&ITFR);
+    print_OUTBUF();
     /** PRE FLOW CONTROL FRAME
 
      * wait here until we receive the flow control frame 
@@ -62,25 +72,22 @@ void send_ISOTP_frames(UDS_Packet *udsp) {
     /* POST FLOW CONTROL FRAME */
     while (len_queue(data_queue) > 0) {
       printf("\nDLEN: %d\n", len_queue(data_queue));
-      CANTP_consec_frame(&cfr, data_queue, sequence++);
-      populate_output_buffer(&cfr);
-      for (uInt8 i = 0; i < 8; i++) {
-        printf("%s : 0x%02X\n", i == 0 ? "PCI" : "DAT", OUT_BUF[i]);
-      }
+      CANTP_consec_frame(&ITFR, data_queue, sequence++);
+      populate_output_buffer(&ITFR);
+      print_OUTBUF();
     }
   } else {
-    CANTP_single_frame(&cfr, data_queue, dataLength);
-    populate_output_buffer(&cfr);
-    for (uInt8 i = 0; i < 8; i++) {
-      printf("%s : 0x%02X\n", i == 0 ? "PCI" : "DAT", OUT_BUF[i]);
-    }
+    CANTP_single_frame(&ITFR, data_queue, dataLength);
+    populate_output_buffer(&ITFR);
+
+    print_OUTBUF();
   }
 }
 
-void CANTP_single_frame(CAN_Frame *cfr, queue* data_queue, uInt16 dataLength) {
+void CANTP_single_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength) {
   uInt8 idx = 0;
   uInt8 queue_data;
-  cfr->data[idx++] = (CAN_CODE_SINGLE_FRAME << 4) | (dataLength & 0xF);
+  ITFR->data[idx++] = (CAN_CODE_SINGLE_FRAME << 4) | (dataLength & 0xF);
 
   while (idx < 8) {
     /**
@@ -88,36 +95,36 @@ void CANTP_single_frame(CAN_Frame *cfr, queue* data_queue, uInt16 dataLength) {
      * we load the data into a memory address to get the actual data.
      */
     bool opSuccess = at_queue_front(data_queue, &queue_data);
-    cfr->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
+    ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
 }
 
-void CANTP_first_frame(CAN_Frame *cfr, queue *data_queue, uInt16 dataLength) {
+void CANTP_first_frame(ISO_TP_Frame *ITFR, queue *data_queue, uInt16 dataLength) {
   uInt8 idx = 0;
   uInt8 queue_data;
 
   /** @todo handle this more gracefully than an assert() call to prevent issue in ops */
   assert(dataLength <= 0x1000); /* data must be <= 12 bits; 4096 or 0x1000 */
   uInt16 PCI = (CAN_CODE_FIRST_FRAME << 12) | (dataLength & 0xFFF);
-  cfr->data[idx++] = ((PCI >> 8) & 0xFF);
-  cfr->data[idx++] = (PCI & 0xFF);
+  ITFR->data[idx++] = ((PCI >> 8) & 0xFF);
+  ITFR->data[idx++] = (PCI & 0xFF);
 
   while (idx < 8) {
     bool opSuccess = at_queue_front(data_queue, &queue_data); 
-    cfr->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
+    ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
 }
 
-void CANTP_consec_frame(CAN_Frame *cfr, queue* data_queue, uInt8 sequenceNum) {
+void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt8 sequenceNum) {
   uInt8 idx = 0;
   uInt8 queue_data;
-  cfr->data[idx++] = (CAN_CODE_CONSEC_FRAME << 4) | (sequenceNum % 0xF);
+  ITFR->data[idx++] = (CAN_CODE_CONSEC_FRAME << 4) | (sequenceNum % 0xF);
 
   while (idx < 8) {
     bool opSuccess = at_queue_front(data_queue, &queue_data);
-    cfr->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
+    ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
 }
@@ -133,22 +140,22 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
     return false;
   }
   fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
-  if (memcmp(IN_BUF, NULL_BUF, 8) == 0) {
+  if (memcmp(IN_BUF, NULL_BUF, 10) == 0) {
     return false;
-  }
+  } 
 
-  if (IN_BUF[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
+  if (CAN_DATA[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
     uInt8 offset = 2; /* The actual data maintains an offset from the start of packet. */
     uInt8 idx = 0;
 
-    udsp->SID = IN_BUF[1];
-    udsp->dataLength = (IN_BUF[0] & 0xF) - 1;
+    udsp->SID = CAN_DATA[1];
+    udsp->dataLength = (CAN_DATA[0] & 0xF) - 1;
     // udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
 
     for (uInt8 i = 0; i < udsp->dataLength; i++) {
-      udsp->data[idx++] = IN_BUF[i + offset];
+      udsp->data[idx++] = CAN_DATA[i + offset];
     }
-  } else if (IN_BUF[0] >> 4 == CAN_CODE_FIRST_FRAME){
+  } else if (CAN_DATA[0] >> 4 == CAN_CODE_FIRST_FRAME){
     /** 
      * Begin the routine for a segmented transmission 
      * First frame should be the CAN-TP First Frame
@@ -160,12 +167,12 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
     uInt8 offset = 3;
     uInt8 idx = 0;
 
-    udsp->SID = IN_BUF[2];
-    udsp->dataLength = ((IN_BUF[0] << 8) | IN_BUF[1]) & 0xFFF;
+    udsp->SID = CAN_DATA[2];
+    udsp->dataLength = ((CAN_DATA[0] << 8) | CAN_DATA[1]) & 0xFFF;
     // udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
     /* FIRST FRAME */
     for (uInt8 i = 0; i < 6; i++) {
-      udsp->data[idx++] = IN_BUF[i + offset];
+      udsp->data[idx++] = CAN_DATA[i + offset];
     }
     /* CONSECUTIVE FRAMES */
     offset = 1;
@@ -174,7 +181,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
       fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr); /* Simulate INPUT pins */
       uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
       for (uInt8 i = 0; i < lim; i++) {
-        udsp->data[idx++] = IN_BUF[i + offset];
+        udsp->data[idx++] = CAN_DATA[i + offset];
       }
       byte_num -= 7;
     }

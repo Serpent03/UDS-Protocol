@@ -1,3 +1,5 @@
+#pragma once
+
 #include "common.h"
 #include "UDS.h"
 #include "queue.h"
@@ -18,68 +20,67 @@ enum CAN_FRAME_TYPE {
   CAN_TYPE_CONSEC_FRAME
 };
 
-typedef struct CAN_Frame {
-  // this can only be 8 bytes long everytime. Either segment or pad!
-  uInt8 data[8];
-} CAN_Frame;
-
 typedef struct ISO_TP_Frame {
+  /* 11-bit CAN-ID */
   uInt16 addr;
-  CAN_Frame *cfr; 
+  uInt8 data[8]; 
 } ISO_TP_Frame;
 
-enum defaultAddress {
-  DEFAULT_RX_ADDR = 0x6789,
-  DEFAULT_TX_ADDR = 0x1234,
+enum ISO_TP_CODES {
+  DEFAULT_RX_ADDR = 0x731,
+  DEFAULT_TX_ADDR = 0x739,
+  DEFAULT_DLC = 0x8
 };
 
 /** 
  * @todo IN_BUF triggers a flag to start receive stream
- * @todo define a ISO_TP frame enveloping the CAN_packet with the relevant CAN_ID
+ * @todo create a server loop mechanism for ECU states
  */
 
-/**
- * @brief Deallocates the allocated CAN-TP frame.
- * @param cfr The CAN-TP frame to be deallocated.
- * @return void.
- * @META This is deprecated now.
- */
-void dealloc_CANTP_frame(CAN_Frame* cfr);
+// /**
+//  * @brief Deallocates the allocated CAN-TP frame.
+//  * @param cfr The CAN-TP frame to be deallocated.
+//  * @return void.
+//  * @META This is deprecated now.
+//  */
+// void dealloc_CANTP_frame(CAN_Frame* cfr);
 
 /**
- * @brief Takes the data_queue and the dataLength, and returns a single CAN-TP frame.
+ * @brief Takes the data_queue and the dataLength, and returns a single ISO-TP frame.
  * @param data_queue the data_queue filled with the UDS packet data.
  * @param dataLength the length of the data_queue.
- * @param cfr The CAN-TP frame to perform the operation on.
+ * @param ITFR The ISO-TP frame to perform the operation on.
  * @return void.
  */
-void CANTP_single_frame(CAN_Frame *cfr, queue* data_queue, uInt16 dataLength);
+void CANTP_single_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength);
 
 /**
- * @brief Generates the first CAN-TP frame for segmented UDS data.
+ * @brief Generates the first ISO-TP frame for segmented UDS data.
  * @param data_queue The queue filled with UDS packet data.
  * @param dataLength Length of the total UDS packet data.
- * @param cfr The CAN-TP frame to perform the operation on.
+ * @param ITFR The ISO-TP frame to perform the operation on.
  * @return void.
  */ 
-void CANTP_first_frame(CAN_Frame *cfr, queue* data_queue, uInt16 dataLength);
+void CANTP_first_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength);
 
 /**
- * @brief Generates a consecutive CAN-TP frame after the CAN-TP first frame.
+ * @brief Generates a consecutive ISO-TP frame after the ISO-TP first frame.
  * @param data_queue The queue filled with UDS packet data.
  * @param sequenceNum The sequence number for the currently transmitted frame.
- * @param cfr The CAN-TP frame to perform the operation on.
+ * @param ITFR The ISO-TP frame to perform the operation on.
  * @return void.
  */
-void CANTP_consec_frame(CAN_Frame *cfr, queue* data_queue, uInt8 sequenceNum);
+void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt8 sequenceNum);
+
+void CANTP_flow_control_frame(ISO_TP_Frame *cfr);
 
 /**
- * @brief This generates the CAN_ID + CAN_frames for the given UDS packet data.
+ * @brief This generates the CAN_ID + ISO-TP frames for the given UDS packet data.
  * @param udsp the required UDS packet.
- * @todo use the entire ISO_TP header for proper addressing
+ * @param rx_addr The address to send data to.
  * @return void.
  */
-void send_ISOTP_frames(UDS_Packet *udsp);
+void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
 
 /**
  * @brief Take the incoming byte stream from the GPIO and convert it to a UDS packet.
@@ -93,5 +94,5 @@ void send_ISOTP_frames(UDS_Packet *udsp);
  * @param cfr The CAN_TP frame to send.
  * @return void.
  */
-void populate_output_buffer(CAN_Frame* cfr);
+void populate_output_buffer(ISO_TP_Frame *ITFR);
 
