@@ -45,6 +45,5 @@ For receiving data, the program workflow is:
 ## TODOs
 
 - Implement timing controls.
-- Implement FLOW CONTROL frame logic.
 - Implement robust error handling.
 - Flesh out the `parse()` function.

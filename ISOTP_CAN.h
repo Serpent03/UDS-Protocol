@@ -74,22 +74,29 @@ void CANTP_first_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength)
  * @param ITFR The ISO-TP frame to perform the operation on.
  * @return void.
  */
-void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt8 sequenceNum);
+void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNum);
 
 
 /**
  * @brief Sets the flow control mechanism variables(BS, STmin) for outgoing transmissions.
  * @returns True if successful.
+ * @todo remove dependency on FILE I/O.
  */
 bool CANTP_read_flow_control_frame();
 
-void CANTP_write_flow_control_frame();
+/**
+ * @brief Generates a flow control frame for the sender, from the receiver side.
+ * @returns True if successful.
+ * @todo remove dependency on FILE I/O.
+ */
+bool CANTP_write_flow_control_frame();
 
 /**
  * @brief This generates the CAN_ID + ISO-TP frames for the given UDS packet data.
  * @param udsp the required UDS packet.
  * @param rx_addr The address to send data to.
  * @return void.
+ * @FIX Effective limit is 4094 instead of 4096.
  */
 void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
 
@@ -97,6 +104,7 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
  * @brief Take the incoming byte stream from the GPIO and convert it to a UDS packet.
  * @param udsp The UDS packet object for the data to be written to.
  * @return True if the operation was successful.
+ * @FIX Effective limit is 4094 instead of 4096.
  */
  bool receive_ISOTP_frames(UDS_Packet *udsp);
 

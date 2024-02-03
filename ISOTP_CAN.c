@@ -11,13 +11,18 @@ uInt8 *CAN_DATA = &IN_BUF[2];
 
 bool INPUT_HAS_CYCLED = true;
 FILE *fptr;
+FILE *fcfptr; /* FILE ptr for the flow control frame */
 
 ISO_TP_Frame ITFR_TX;
 ISO_TP_Frame ITFR_FC; /* I think I can probably do without this, will have to see. */
 
-uInt8 block_size = -1;
-uInt8 STmin = -1;
+uInt8 block_size = 0;
+uInt8 STmin = 0;
 bool FC_INIT = false;
+
+uInt8 block_size_send = 0;
+uInt8 STMin_send = 0;
+bool FC_SEND = false;
 
 void print_OUTBUF() {
   printf("ADDR: 0x%02X\n", (uInt16)((OUT_BUF[0] << 8) | OUT_BUF[1]) >> 5);
@@ -36,9 +41,6 @@ void populate_output_buffer(ISO_TP_Frame *ITFR) {
   OUT_BUF[1] = (ITFR->addr);
   memcpy(&OUT_BUF[2], ITFR->data, 8);
   fptr = fopen("GPO.bin", "ab");
-  if (fptr != NULL) {
-    fptr = fopen("GPO.bin", "w");
-  }
   fwrite(OUT_BUF, sizeof(uInt8), 10, fptr);
   fclose(fptr);
 }
@@ -50,7 +52,7 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
     enque(data_queue, udsp->data[i]);
   }
 
-  uInt8 sequence = 1;
+  uInt16 sequence = 1;
 
   uInt16 dataLength = len_queue(data_queue);
   ITFR_TX.addr = ((rx_addr << 5) | DEFAULT_DLC);
@@ -140,7 +142,7 @@ void CANTP_first_frame(ISO_TP_Frame *ITFR, queue *data_queue, uInt16 dataLength)
   }
 }
 
-void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt8 sequenceNum) {
+void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNum) {
   uInt8 idx = 0;
   uInt8 queue_data;
   ITFR->data[idx++] = (CAN_CODE_CONSEC_FRAME << 4) | (sequenceNum % 0xF);
@@ -154,7 +156,7 @@ void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt8 sequenceNum
 
 bool CANTP_read_flow_control_frame() {
   /* Read the FC params - STMin and BS. */
-  printf("\nFLOW CONTROL FRAME\n");
+  printf("\nREADING FLOW CONTROL FRAME\n");
   fptr = fopen("GPI.bin", "rb");
   if (fptr == NULL) {
     return false;
@@ -162,14 +164,31 @@ bool CANTP_read_flow_control_frame() {
   fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
 
   if (memcmp(IN_BUF, NULL_BUF, 10) == 0) {
+    fclose(fptr);
     return false;
   } else if ((CAN_DATA[0] >> 4) != CAN_CODE_FLOW_CNTL_FRAME) {
+    fclose(fptr);
     return false;
   }
 
   block_size = CAN_DATA[1];
   STmin = CAN_DATA[2];
 
+  fclose(fptr);
+  return true;
+}
+
+bool CANTP_write_flow_control_frame() {
+  printf("\nWRITING FLOW CONTROL FRAME\n");
+  fcfptr = fopen("GPI.bin", "wb");
+  if (fcfptr == NULL) {
+    return false;
+  }
+  
+  fwrite(&block_size_send, sizeof(uInt8), 1, fcfptr);
+  fwrite(&STMin_send, sizeof(uInt8), 1, fcfptr);
+
+  fclose(fcfptr);
   return true;
 }
 
@@ -179,12 +198,13 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
    * First 4 bits of each IN_BUF to verify CAN-TP frame type.
    */
   
-  fptr = fopen("GPI.bin", "rb");
+  fptr = fopen("GPO.bin", "rb");
   if (fptr == NULL) {
     return false;
   }
   fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
   if (memcmp(IN_BUF, NULL_BUF, 10) == 0) {
+    fclose(fptr);
     return false;
   } 
 
@@ -206,25 +226,48 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
      * After that we enter a while loop and keep ingesting frames until we 
      * have to send out a flow control frame.
      * INPUT_BUF then gets updated here, until we finish reading the message.
-     * @todo Implement the flow control frame on the receiver end.
      */
     uInt8 offset = 3;
-    uInt8 idx = 0;
+    uInt16 idx = 0;
 
     udsp->SID = CAN_DATA[2];
-    udsp->dataLength = ((CAN_DATA[0] << 8) | CAN_DATA[1]) & 0xFFF;
-    // udsp->data = (uInt8*)calloc(udsp->dataLength, sizeof(uInt8));
+    udsp->dataLength = (((CAN_DATA[0] << 8) | CAN_DATA[1]) & 0xFFF) - 1;
     /* FIRST FRAME */
     for (uInt8 i = 0; i < 6; i++) {
       udsp->data[idx++] = CAN_DATA[i + offset];
     }
+    idx--;
+    /* We decrement the idx and udsp->dataLength, as the CAN packet accounted for the SID to be IN 
+     * the data itself -- which is not the case. */
+
+    while (!FC_SEND) {
+      CANTP_write_flow_control_frame();
+      FC_SEND = true;
+      /** @todo add in the timeout abort waiting for FC-frame to be written. */
+    }
+    uInt8 block_size_copy = block_size_send;
+    /* We'll maintain this copy to know when we have to send block_size information again. */
+
+
     /* CONSECUTIVE FRAMES */
     offset = 1;
     Int16 byte_num = udsp->dataLength; /* Remaining bytes of data */
+
     while (byte_num > 0) {
+      if (FC_SEND && block_size_copy > 0) {
+        block_size_copy--;
+        FC_SEND = block_size_copy > 0;
+      }
+      while (!FC_SEND) {
+        CANTP_write_flow_control_frame();
+        block_size_copy = block_size_send;
+      }
+      /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
+       * we will have to send the FC frame again, which is what the FC_SEND boolean is for. */
+
       fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr); /* Simulate INPUT pins */
       uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
-      for (uInt8 i = 0; i < lim; i++) {
+      for (uInt16 i = 0; i < lim; i++) {
         udsp->data[idx++] = CAN_DATA[i + offset];
       }
       byte_num -= 7;
