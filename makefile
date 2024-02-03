@@ -7,3 +7,5 @@ main: $(sources)
 
 clean:
 	rm main
+	rm GPO.bin
+	rm GPI.bin
