@@ -10,3 +10,5 @@ typedef unsigned int uInt32;
 typedef char Int8;
 typedef short int Int16;
 typedef int Int32;
+typedef float Float32;
+typedef double Float64;

@@ -1,11 +1,10 @@
 #include "common.h"
 #include "UDS.h"
 
-/**
- * uds_tx will be used for all outbound transmissions.
- */
-
+/* uds_tx will be used for all outbound transmissions. */
 UDS_Packet uds_tx;
+/* uds_rx will be used for all inbound transmissions. */
+UDS_Packet uds_rx;
 uInt8 resp_data[4096];
 
 /**

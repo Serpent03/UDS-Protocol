@@ -1,4 +1,5 @@
 #pragma once 
+
 #include "common.h"
 
 enum SID_CODES {
@@ -42,6 +43,7 @@ typedef struct UDS_Packet {
 } UDS_Packet;
 
 extern UDS_Packet uds_tx;
+extern UDS_Packet uds_rx;
 extern uInt8 resp_data[4096];
 
 /**
