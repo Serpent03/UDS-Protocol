@@ -11,5 +11,5 @@ clean:
 	rm GPI.bin
 
 push:
-	git push uds-dev origin
+	git push uds-dev master
 	git push origin master
