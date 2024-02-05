@@ -57,8 +57,10 @@ void Server_Main() {
     gettimeofday(&tp, NULL);
     CLOCK_TIME_CURRENT = (tp.tv_sec * 1000) + (tp.tv_usec / 1000);
 
+    /* This prevents the function from firing off in the same second multiple times. */
     if (CLOCK_TIME_CURRENT != CLOCK_TIME_OLD) {
       CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
+
       switch (CLOCK_TIME_CURRENT % CLOCK_CYCLE) {
         case 0:
           servicer();

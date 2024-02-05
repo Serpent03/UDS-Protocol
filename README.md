@@ -16,7 +16,7 @@ sudo apt install make
 Clone the repository onto your local machine using git:
 
 ```bash
-git clone https://github.com/Serpent03/UDS-Protocol.git
+git clone https://github.com/PupilMesh/UDSDev.git
 ```
 
 ## Overview
