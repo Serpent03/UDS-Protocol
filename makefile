@@ -9,3 +9,7 @@ clean:
 	rm main
 	rm GPO.bin
 	rm GPI.bin
+
+push:
+	git push uds-dev origin
+	git push origin master

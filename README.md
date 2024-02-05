@@ -29,6 +29,8 @@ git clone https://github.com/PupilMesh/UDSDev.git
 
 `common.h` Holds common definitions and references.
 
+`servicer.h` Holds definitions for the main loop functions.
+
 ## Program Flow
 
 For transmission, the program works as follows:
@@ -41,6 +43,11 @@ For receiving data, the program workflow is:
 - Make a UDS_Packet structure, and pass it to the `receive_ISOTP_frames()` function by reference.
 - Data coming in continuously from the I/O(simulated via FILE I/O) decides the length of the UDS packet through various FCI codes specified in the CAN-TP/ISO-TP frame.
 - The received UDS packet can be parsed through the `parse()` function, which can then generate a reply to transmitted back.
+
+The overall program flow is:
+- In `main.c`, the `Server_Init()` function initializes the server loop.
+- `Server_Main()` is called, where the `servicer()` is called every `CLOCK_CYCLE` seconds.
+- The `servicer()` deals with all transmissions and packet processing, calling functions defined above.
 
 ## TODOs
 
