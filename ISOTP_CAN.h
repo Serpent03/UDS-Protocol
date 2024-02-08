@@ -54,27 +54,27 @@ enum ISO_TP_TIME_LIMITS {
  * @param data_queue the data_queue filled with the UDS packet data.
  * @param dataLength the length of the data_queue.
  * @param ITFR The ISO-TP frame to perform the operation on.
- * @return void.
+ * @return True if the operation is successful.
  */
-void CANTP_single_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength);
+bool CANTP_single_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength);
 
 /**
  * @brief Generates the first ISO-TP frame for segmented UDS data.
  * @param data_queue The queue filled with UDS packet data.
  * @param dataLength Length of the total UDS packet data.
  * @param ITFR The ISO-TP frame to perform the operation on.
- * @return void.
+ * @return True if the operation was successful.
  */ 
-void CANTP_first_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength);
+bool CANTP_first_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength);
 
 /**
  * @brief Generates a consecutive ISO-TP frame after the ISO-TP first frame.
  * @param data_queue The queue filled with UDS packet data.
  * @param sequenceNum The sequence number for the currently transmitted frame.
  * @param ITFR The ISO-TP frame to perform the operation on.
- * @return void.
+ * @return True if the operation was successful.
  */
-void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNum);
+bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNum);
 
 
 /**
@@ -95,10 +95,10 @@ bool CANTP_write_flow_control_frame();
  * @brief This generates the CAN_ID + ISO-TP frames for the given UDS packet data.
  * @param udsp the required UDS packet.
  * @param rx_addr The address to send data to.
- * @return void.
+ * @return True if the operation was successful.
  * @FIX Effective limit is 4094 instead of 4096.
  */
-void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
+bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
 
 /**
  * @brief Take the incoming byte stream from the GPIO and convert it to a UDS packet.

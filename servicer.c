@@ -8,6 +8,7 @@ bool receiveFlag = false;
 bool transmitFlag = true;
 bool idle = true;
 struct timeval tp;
+
 uInt32 CLOCK_TIME_START;
 uInt32 CLOCK_TIME_CURRENT;
 uInt32 CLOCK_TIME_OLD;
@@ -25,7 +26,6 @@ void servicer() {
     } else {
       printf("Opfail: GPIO does not exist or it is empty.\n");
     }
-    // exit(0);
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
@@ -36,7 +36,9 @@ void servicer() {
 
     uInt8 data[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0x42 };
     UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
-    send_ISOTP_frames(tx, DEFAULT_RX_ADDR);
+    if (!send_ISOTP_frames(tx, DEFAULT_RX_ADDR)) {
+      /** @todo Retry logic implementation. */
+    }
     receiveFlag = true; /* Set it to true for debug here. */
   }
   idle = true;

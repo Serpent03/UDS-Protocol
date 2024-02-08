@@ -45,7 +45,7 @@ void populate_output_buffer(ISO_TP_Frame *ITFR) {
   fclose(fptr);
 }
 
-void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
+bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
   queue *data_queue = init_queue(udsp->dataLength + 1);
   enque(data_queue, udsp->SID);
   for (uInt16 i = 0; i < udsp->dataLength; i++) {
@@ -96,22 +96,30 @@ void send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
         FC_INIT = CANTP_read_flow_control_frame();
       }
       printf("\nDLEN: %d\n", len_queue(data_queue));
-      CANTP_consec_frame(&ITFR_TX, data_queue, sequence++);
+      if (!CANTP_consec_frame(&ITFR_TX, data_queue, sequence++)) {
+        return false;
+      }
       populate_output_buffer(&ITFR_TX);
 
       print_OUTBUF();
     }
   } else {
-    CANTP_single_frame(&ITFR_TX, data_queue, dataLength);
+    if (!CANTP_single_frame(&ITFR_TX, data_queue, dataLength)) {
+      return false;
+    };
     populate_output_buffer(&ITFR_TX);
 
     print_OUTBUF();
   }
+  return true;
 }
 
-void CANTP_single_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength) {
+bool CANTP_single_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength) {
   uInt8 idx = 0;
   uInt8 queue_data;
+  if (dataLength == 0) {
+    return false;
+  }
   ITFR->data[idx++] = (CAN_CODE_SINGLE_FRAME << 4) | (dataLength & 0xF);
 
   while (idx < 8) {
@@ -123,14 +131,18 @@ void CANTP_single_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 dataLength
     ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
+  return true;
 }
 
-void CANTP_first_frame(ISO_TP_Frame *ITFR, queue *data_queue, uInt16 dataLength) {
+bool CANTP_first_frame(ISO_TP_Frame *ITFR, queue *data_queue, uInt16 dataLength) {
   uInt8 idx = 0;
   uInt8 queue_data;
 
   /** @todo handle this more gracefully than an assert() call to prevent issue in ops */
-  assert(dataLength <= 0x1000); /* data must be <= 12 bits; 4096 or 0x1000 */
+  if (dataLength >= 0x1000){ /* data must be <= 12 bits; 4096 or 0x1000 */
+    return false;
+  }   
+  
   uInt16 PCI = (CAN_CODE_FIRST_FRAME << 12) | (dataLength & 0xFFF);
   ITFR->data[idx++] = ((PCI >> 8) & 0xFF);
   ITFR->data[idx++] = (PCI & 0xFF);
@@ -140,9 +152,10 @@ void CANTP_first_frame(ISO_TP_Frame *ITFR, queue *data_queue, uInt16 dataLength)
     ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
+  return true;
 }
 
-void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNum) {
+bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNum) {
   uInt8 idx = 0;
   uInt8 queue_data;
   ITFR->data[idx++] = (CAN_CODE_CONSEC_FRAME << 4) | (sequenceNum % 0xF);
@@ -152,6 +165,7 @@ void CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNu
     ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
+  return true;
 }
 
 bool CANTP_read_flow_control_frame() {
