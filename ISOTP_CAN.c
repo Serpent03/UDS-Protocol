@@ -64,7 +64,10 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
   if (dataLength > 7) {
     /* First frame in the segmented transmission. */
 
-    CANTP_first_frame(&ITFR_TX, data_queue, dataLength);
+    if (!CANTP_first_frame(&ITFR_TX, data_queue, dataLength)) {
+      /* The first_frame returned false because length of data > 4096 */
+      return false;
+    }
     populate_output_buffer(&ITFR_TX);
     print_OUTBUF();
 

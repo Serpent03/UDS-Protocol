@@ -5,6 +5,7 @@
 #include "UDS.h"
 
 #define CLOCK_CYCLE 1000
+#define TX_RETRY_LIMIT 3
 
 extern bool receiveFlag;
 extern bool idle;
