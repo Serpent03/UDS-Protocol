@@ -19,6 +19,7 @@ void servicer() {
   if (receiveFlag && idle) {
     idle = false;
     receiveFlag = false;
+    /** @todo Retry logic implementation. */
     bool opSuccess = receive_ISOTP_frames(&uds_rx);
     if (opSuccess) {
       printf("\nSID: 0x%02X\n", uds_rx.SID);
@@ -37,7 +38,6 @@ void servicer() {
   if (idle && transmitFlag) {
     transmitFlag = false;
     idle = false; 
-    /** @todo Retry logic implementation. */
     while (!send_ISOTP_frames(tx, DEFAULT_RX_ADDR) && TX_RETRY_NUM < TX_RETRY_LIMIT) {
       printf("TRY %d FOR TX!\n", TX_RETRY_NUM + 1);
       TX_RETRY_NUM++;

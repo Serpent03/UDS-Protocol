@@ -141,7 +141,6 @@ bool CANTP_first_frame(ISO_TP_Frame *ITFR, queue *data_queue, uInt16 dataLength)
   uInt8 idx = 0;
   uInt8 queue_data;
 
-  /** @todo handle this more gracefully than an assert() call to prevent issue in ops */
   if (dataLength >= 0x1000){ /* data must be <= 12 bits; 4096 or 0x1000 */
     return false;
   }   
@@ -260,7 +259,11 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
     while (!FC_SEND) {
       CANTP_write_flow_control_frame();
       FC_SEND = true;
-      /** @todo add in the timeout abort waiting for FC-frame to be written. */
+      /** 
+       * @todo add in the timeout abort waiting for FC-frame to be written. 
+       * This will probably work with a timestamp synced with the tx/rx function
+       * call and a timer incrementing with the flow control function
+       */
     }
     uInt8 block_size_copy = block_size_send;
     /* We'll maintain this copy to know when we have to send block_size information again. */
