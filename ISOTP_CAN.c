@@ -65,7 +65,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
     /* First frame in the segmented transmission. */
 
     if (!CANTP_first_frame(&ITFR_TX, data_queue, dataLength)) {
-      /* The first_frame returned false because length of data > 4096 */
+      /* The first_frame returns false if length of data > 4096 */
       return false;
     }
     populate_output_buffer(&ITFR_TX);
@@ -83,8 +83,11 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
     /* Set up the STMin, BS params through GPI.bin */
     while (!FC_INIT) {
       FC_INIT = CANTP_read_flow_control_frame();
-      FC_INIT = true;
-      /** @todo Add in time-out abort waiting for FC-frame */
+      if (getTime() > CLOCK_TIME_AT_TX + TX_TIME_LIMIT) {
+        return false;
+      }
+      // FC_INIT = true;
+      /** @todo Verify true to life timeout. */
     }
 
     /* POST FLOW CONTROL FRAME */
@@ -97,6 +100,9 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
       }
       while (!FC_INIT) {
         FC_INIT = CANTP_read_flow_control_frame();
+        if (getTime() > CLOCK_TIME_AT_TX + TX_TIME_LIMIT) {
+          return false;
+        }
       }
       printf("\nDLEN: %d\n", len_queue(data_queue));
       if (!CANTP_consec_frame(&ITFR_TX, data_queue, sequence++)) {
@@ -171,7 +177,8 @@ bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNu
 }
 
 bool CANTP_read_flow_control_frame() {
-  /* Read the FC params - STMin and BS. */
+  printf("%lu :: %lu\n", CLOCK_TIME_AT_TX + TX_TIME_LIMIT, getTime());
+  /** @FIX CLOCK_TIME_TX and getTime() results in negative integer. */
   printf("\nREADING FLOW CONTROL FRAME\n");
   fptr = fopen("GPI.bin", "rb");
   if (fptr == NULL) {
@@ -259,11 +266,6 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
     while (!FC_SEND) {
       CANTP_write_flow_control_frame();
       FC_SEND = true;
-      /** 
-       * @todo add in the timeout abort waiting for FC-frame to be written. 
-       * This will probably work with a timestamp synced with the tx/rx function
-       * call and a timer incrementing with the flow control function
-       */
     }
     uInt8 block_size_copy = block_size_send;
     /* We'll maintain this copy to know when we have to send block_size information again. */
