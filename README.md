@@ -51,7 +51,7 @@ The overall program flow is:
 
 ## TODOs
 
+- Implement addressing considerations for rx/tx.
 - Implement timing controls.
 - Implement actual GPIO operations.
-- Implement robust error handling.
 - Flesh out the `parse()` function.
