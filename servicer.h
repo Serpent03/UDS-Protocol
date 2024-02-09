@@ -5,14 +5,14 @@
 #include "UDS.h"
 
 #define CLOCK_CYCLE 1000
-#define TX_RETRY_LIMIT 3
 
 extern bool receiveFlag;
 extern bool idle;
 extern bool transmitFlag;
-extern uInt32 CLOCK_TIME_START;
-extern uInt32 CLOCK_TIME_CURRENT;
-extern uInt32 CLOCK_TIME_OLD;
+
+extern uInt64 CLOCK_TIME_START;
+extern uInt64 CLOCK_TIME_CURRENT;
+extern uInt64 CLOCK_TIME_OLD;
 
 /**
  * @brief Initializes the server.
