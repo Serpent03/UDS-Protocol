@@ -4,7 +4,7 @@
 #include "ISOTP_CAN.h"
 #include "UDS.h"
 
-#define CLOCK_CYCLE 1000
+#define CLOCK_CYCLE 200
 
 extern bool receiveFlag;
 extern bool idle;

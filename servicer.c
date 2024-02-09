@@ -7,6 +7,8 @@
 bool receiveFlag = false;
 bool transmitFlag = true;
 bool idle = true;
+bool shutdown = false;
+
 struct timeval tp;
 
 uInt64 CLOCK_TIME_START;
@@ -83,7 +85,7 @@ void Server_Init() {
 }
 
 void Server_Main() {
-  while (true) {
+  while (!shutdown) {
     gettimeofday(&tp, NULL);
     CLOCK_TIME_CURRENT = (tp.tv_sec * 1000) + (tp.tv_usec / 1000);
 
