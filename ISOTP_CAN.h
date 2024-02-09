@@ -10,7 +10,10 @@ enum CAN_FRAME_CODES {
   CAN_CODE_SINGLE_FRAME = 0x0,
   CAN_CODE_FIRST_FRAME = 0x1,
   CAN_CODE_CONSEC_FRAME = 0x2,
-  CAN_CODE_FLOW_CNTL_FRAME = 0x3 
+  CAN_CODE_FLOW_CNTL_FRAME = 0x3 ,
+  CAN_FC_FLAG_0 = 0x0,
+  CAN_FC_FLAG_1 = 0x1,
+  CAN_FC_FLAG_2 = 0x2,
 };
 
 enum CAN_FRAME_TYPE {
@@ -86,10 +89,11 @@ bool CANTP_read_flow_control_frame();
 
 /**
  * @brief Generates a flow control frame for the sender, from the receiver side.
+ * @param addr The address to write the flow control frame to.
  * @returns True if successful.
  * @todo remove dependency on FILE I/O.
  */
-bool CANTP_write_flow_control_frame();
+bool CANTP_write_flow_control_frame(uInt16 addr);
 
 /**
  * @brief This generates the CAN_ID + ISO-TP frames for the given UDS packet data.
@@ -103,10 +107,11 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
 /**
  * @brief Take the incoming byte stream from the GPIO and convert it to a UDS packet.
  * @param udsp The UDS packet object for the data to be written to.
+ * @param tx_addr The address from which data is arriving.
  * @return True if the operation was successful.
  * @FIX Effective limit is 4094 instead of 4096.
  */
- bool receive_ISOTP_frames(UDS_Packet *udsp);
+ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr);
 
 /**
  * @brief Initiates the routine for sending the ISO_TP frame(address + CAN_TP frame) to GPIO

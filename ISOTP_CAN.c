@@ -201,21 +201,24 @@ bool CANTP_read_flow_control_frame() {
   return true;
 }
 
-bool CANTP_write_flow_control_frame() {
+bool CANTP_write_flow_control_frame(uInt16 addr) {
   printf("\nWRITING FLOW CONTROL FRAME\n");
   fcfptr = fopen("GPI.bin", "wb");
   if (fcfptr == NULL) {
     return false;
   }
   
-  fwrite(&block_size_send, sizeof(uInt8), 1, fcfptr);
-  fwrite(&STMin_send, sizeof(uInt8), 1, fcfptr);
+  ITFR_FC.addr = ((addr << 5) | DEFAULT_DLC);
+  ITFR_FC.data[0] = (CAN_CODE_FLOW_CNTL_FRAME << 4) | (CAN_FC_FLAG_0);
+  ITFR_FC.data[1] = block_size_send;
+  ITFR_FC.data[2] = STMin_send;
 
+  fwrite(&ITFR_FC, sizeof(uInt8), 10, fcfptr);
   fclose(fcfptr);
   return true;
 }
 
-bool receive_ISOTP_frames(UDS_Packet *udsp) {
+bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
   /**
    * Simulate actual GPIO from FILE stream. INPUT_BUF first gets updated here.
    * First 4 bits of each IN_BUF to verify CAN-TP frame type.
@@ -264,7 +267,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
      * the data itself -- which is not the case. */
 
     while (!FC_SEND) {
-      CANTP_write_flow_control_frame();
+      CANTP_write_flow_control_frame(tx_addr);
       FC_SEND = true;
     }
     uInt8 block_size_copy = block_size_send;
@@ -281,7 +284,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
         FC_SEND = block_size_copy > 0;
       }
       while (!FC_SEND) {
-        CANTP_write_flow_control_frame();
+        CANTP_write_flow_control_frame(tx_addr);
         block_size_copy = block_size_send;
       }
       /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
