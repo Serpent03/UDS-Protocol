@@ -1,4 +1,4 @@
-#include "common.h"
+#include "../common.h"
 #include "timing.h"
 
 /* This can stay hidden and work inside the functions. */

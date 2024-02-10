@@ -1,7 +1,7 @@
-#include "common.h"
-#include "ISOTP_CAN.h"
-#include "queue.h"
-#include "timing.h"
+#include "../common.h"
+#include "../ISOTP/ISOTP_CAN.h"
+#include "../QUEUE/queue.h"
+#include "../SERVICER/timing.h"
 
 uInt8 NULL_BUF[10] = { 0 };
 uInt8 OUT_BUF[10];

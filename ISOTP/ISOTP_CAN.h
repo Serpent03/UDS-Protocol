@@ -1,8 +1,8 @@
 #pragma once
 
-#include "common.h"
-#include "UDS.h"
-#include "queue.h"
+#include "../common.h"
+#include "../UDS/UDS.h"
+#include "../QUEUE/queue.h"
 
 #define ISOTP_PADDING 0xAA
 

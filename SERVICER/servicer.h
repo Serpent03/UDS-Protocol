@@ -1,8 +1,8 @@
 #pragma once 
 
-#include "common.h"
-#include "ISOTP_CAN.h"
-#include "UDS.h"
+#include "../common.h"
+#include "../ISOTP/ISOTP_CAN.h"
+#include "../UDS/UDS.h"
 #include "timing.h"
 
 #define TX_RETRY_LIMIT 3

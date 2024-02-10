@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "../common.h"
 #include <sys/time.h>
 
 #define TX_TIME_LIMIT 150 /* The transmitting message should happen in 150ms */

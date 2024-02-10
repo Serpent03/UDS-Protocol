@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "common.h"
+#include "../common.h"
 
 enum SID_CODES {
   SID_DIAGNOSTIC_SESS_CNTL = 0x10,
