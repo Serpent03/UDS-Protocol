@@ -18,21 +18,3 @@ typedef int64_t Int64;
 typedef float Float32;
 typedef double Float64;
 
-#define TX_RETRY_LIMIT 3
-#define TX_TIME_LIMIT 150 /* The transmitting message should happen in 150ms */
-
-extern uInt64 CLOCK_TIME_AT_TX;
-extern uInt64 CLOCK_TIME_AT_RX;
-
-/**
- * @brief Gets the current UNIX timestamp.
- * @returns Current UNIX timestamp.
- */
-uInt64 getTime();
-
-/**
- * @brief Sets the current UNIX timestamp inside the passed variable.
- * @param VAR The 32-bit unsigned integer to put the timestamp in.
- * @returns void.
- */
-void setTime(uInt64 *VAR);

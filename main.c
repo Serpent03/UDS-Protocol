@@ -3,4 +3,5 @@
 
 int main() {
   Server_Init();
+  Server_Main();
 }

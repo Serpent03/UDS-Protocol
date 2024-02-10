@@ -1,6 +1,7 @@
 #include "common.h"
 #include "ISOTP_CAN.h"
 #include "queue.h"
+#include "timing.h"
 
 uInt8 NULL_BUF[10] = { 0 };
 uInt8 OUT_BUF[10];
@@ -86,7 +87,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
       if (getTime() > CLOCK_TIME_AT_TX + TX_TIME_LIMIT) {
         return false;
       }
-      // FC_INIT = true;
+      FC_INIT = true;
       /** @todo Verify true to life timeout. */
     }
 

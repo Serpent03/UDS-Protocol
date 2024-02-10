@@ -3,8 +3,9 @@
 #include "common.h"
 #include "ISOTP_CAN.h"
 #include "UDS.h"
+#include "timing.h"
 
-#define CLOCK_CYCLE 200
+#define TX_RETRY_LIMIT 3
 
 extern bool receiveFlag;
 extern bool idle;
@@ -15,7 +16,7 @@ extern uInt64 CLOCK_TIME_CURRENT;
 extern uInt64 CLOCK_TIME_OLD;
 
 /**
- * @brief Initializes the server.
+ * @brief Initializes the server: clocks, flags etc.
  * @returns void.
  */
 void Server_Init();
