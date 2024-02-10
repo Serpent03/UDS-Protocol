@@ -19,17 +19,23 @@ Clone the repository onto your local machine using git:
 git clone https://github.com/PupilMesh/UDSDev.git
 ```
 
+To run the implementation, do the following:
+- Run `make clean` to clean up any old GPI/O bin files.
+- Run `make`
+- Run `./main`
+- Run `make clean` again to clean up old GPI and GPO bin files.
+
 ## Overview
 
-`ISOTP_CAN.h` Holds all the references for functions required to send a CAN packet(8 bytes).
+`/ISOTP` Holds all definitions for an ISOTP packet.
 
-`UDS.h` Holds all references for functions and objects required to build a UDS packet.
+`/UDS` Holds all definitions for functions and objects required to build a UDS packet.
 
-`queue.h` Holds all references for a circular queue.
+`/QUEUE` Holds all definitions for a circular queue.
 
 `common.h` Holds common definitions and references.
 
-`servicer.h` Holds definitions for the main loop functions.
+`/SERVICER` Holds definitions for the main loop functions.
 
 ## Program Flow
 
