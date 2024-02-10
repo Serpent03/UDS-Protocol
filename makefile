@@ -1,4 +1,4 @@
-sources = main.c UDS.c ISOTP_CAN.c servicer.c queue.c
+sources = main.c UDS.c ISOTP_CAN.c timing.c servicer.c queue.c
 cc = gcc
 ccflags = -Wall
 
