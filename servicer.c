@@ -4,10 +4,10 @@
 #include "UDS.h"
 #include "timing.h"
 
-bool receiveFlag = false;
-bool transmitFlag = true;
-bool idle = true;
-bool shutdown = false;
+bool receiveFlag;
+bool transmitFlag;
+bool idle;
+bool shutdown;
 
 uInt64 CLOCK_TIME_START;
 uInt64 CLOCK_TIME_CURRENT;
@@ -66,6 +66,10 @@ void Server_Init() {
   setTime(&CLOCK_TIME_START);
   setTime(&CLOCK_TIME_CURRENT);
   CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
+  receiveFlag = false;
+  transmitFlag = true;
+  idle = true;
+  shutdown = false;
 }
 
 void Server_Main() {
