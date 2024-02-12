@@ -14,3 +14,7 @@ void setTime(uInt64 *CLOCK_VAR) {
   gettimeofday(&tp, NULL);
   *CLOCK_VAR = (tp.tv_sec * 1000) + (tp.tv_usec / 1000);
 }
+
+bool check_if_timeout(enum ISO_TP_TIME_LIMITS time_limit) {
+  return getTime() < CLOCK_TIME_AT_TX + time_limit;
+} 
