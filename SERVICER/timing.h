@@ -38,7 +38,8 @@ void setTime(uInt64 *VAR);
 
 /**
  * @brief Used to check if an activity has happened within time limits.
+ * @param CLOCK_TIME The UNIX timestamp to be used for reference.
  * @param time_limit The time limit to check.
  * @returns True if the time limit has not been exceeded.
  * */
-bool check_if_timeout(enum ISO_TP_TIME_LIMITS time_limit);
+bool check_if_timeout(uInt64 CLOCK_TIME, enum ISO_TP_TIME_LIMITS time_limit);

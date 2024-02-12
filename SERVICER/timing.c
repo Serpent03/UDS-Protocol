@@ -15,6 +15,6 @@ void setTime(uInt64 *CLOCK_VAR) {
   *CLOCK_VAR = (tp.tv_sec * 1000) + (tp.tv_usec / 1000);
 }
 
-bool check_if_timeout(enum ISO_TP_TIME_LIMITS time_limit) {
-  return getTime() < CLOCK_TIME_AT_TX + time_limit;
+bool check_if_timeout(uInt64 CLOCK_TIME, enum ISO_TP_TIME_LIMITS time_limit) {
+  return getTime() < CLOCK_TIME + time_limit;
 } 

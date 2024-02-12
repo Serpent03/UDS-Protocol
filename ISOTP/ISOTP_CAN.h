@@ -29,18 +29,13 @@ typedef struct ISO_TP_Frame {
   uInt8 data[8]; 
 } ISO_TP_Frame;
 
-enum ISO_TP_CODES {
-  DEFAULT_RX_ADDR = 0x731,
-  DEFAULT_TX_ADDR = 0x739,
+enum ISOTP_CODES {
+  DEFAULT_SERVER_ADDR = 0x731,
+  DEFAULT_CLIENT_ADDR = 0x739,
   DEFAULT_DLC = 0x8
 };
 
-enum ISO_TP_TIME_LIMITS {
-  TIMEOUT = 500
-};
-
 /** 
- * @todo IN_BUF triggers a flag to start receive stream
  * @todo create a server loop mechanism for ECU states
  */
 
@@ -98,7 +93,7 @@ bool CANTP_write_flow_control_frame(uInt16 addr);
 /**
  * @brief This generates the CAN_ID + ISO-TP frames for the given UDS packet data.
  * @param udsp the required UDS packet.
- * @param rx_addr The address to send data to.
+ * @param rx_addr The address to send the frames from.
  * @return True if the operation was successful.
  * @FIX Effective limit is 4094 instead of 4096.
  */
@@ -107,7 +102,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
 /**
  * @brief Take the incoming byte stream from the GPIO and convert it to a UDS packet.
  * @param udsp The UDS packet object for the data to be written to.
- * @param tx_addr The address from which data is arriving.
+ * @param tx_addr The address to listen for packets from.
  * @return True if the operation was successful.
  * @FIX Effective limit is 4094 instead of 4096.
  */

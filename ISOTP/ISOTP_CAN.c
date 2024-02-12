@@ -2,6 +2,7 @@
 #include "../ISOTP/ISOTP_CAN.h"
 #include "../QUEUE/queue.h"
 #include "../SERVICER/timing.h"
+#include "../SERVICER/session.h"
 
 uInt8 NULL_BUF[10] = { 0 };
 uInt8 OUT_BUF[10];
@@ -17,11 +18,11 @@ FILE *fcfptr; /* FILE ptr for the flow control frame */
 ISO_TP_Frame ITFR_TX;
 ISO_TP_Frame ITFR_FC; /* I think I can probably do without this, will have to see. */
 
-uInt8 block_size = 0;
-uInt8 STmin = 0;
+uInt8 block_size_recv = 0;
+uInt8 STmin_recv = 0;
 bool FC_INIT = false;
 
-uInt8 block_size_send = 0;
+uInt8 block_size_send = 2;
 uInt8 STMin_send = 0;
 bool FC_SEND = false;
 
@@ -53,72 +54,71 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
     enque(data_queue, udsp->data[i]);
   }
 
-  uInt16 sequence = 1;
-
-  uInt16 dataLength = len_queue(data_queue);
-  ITFR_TX.addr = ((rx_addr << 5) | DEFAULT_DLC);
   /* 
    * The address is 11-bits. Assuming last 5 bits can be used 
    * for the DLC setting by some bit-shifting magic. 
    */
+  uInt16 sequence = 1;
+  uInt16 dataLength = len_queue(data_queue);
+  ITFR_TX.addr = ((rx_addr << 5) | DEFAULT_DLC);
+  setTime(&CLOCK_TIME_AT_TX);
+
 
   if (dataLength > 7) {
     /* First frame in the segmented transmission. */
 
+    /**
+     * @todo FF bits for sending messages more than 4096 bytes long.
+     */
     if (!CANTP_first_frame(&ITFR_TX, data_queue, dataLength)) {
-      /* The first_frame returns false if length of data > 4096 */
       return false;
     }
     populate_output_buffer(&ITFR_TX);
     print_OUTBUF();
-
     /*
      * wait here until we receive the flow control frame 
-     * flow control frame sets the block_size and STmin params, which control
-     * how often we send the frame and how many in one go
-     * if block_size has been init to anything other than 0, we tx
-     * that many frames and then return here, waiting for a
-     * flow control frame agan.
+     * flow control frame sets the block_size and STmin params
     */
 
     /* Set up the STMin, BS params through GPI.bin */
     while (!FC_INIT) {
       FC_INIT = CANTP_read_flow_control_frame();
-      if (getTime() > CLOCK_TIME_AT_TX + TX_TIME_LIMIT) {
+      if (!check_if_timeout(CLOCK_TIME_AT_TX, ISOTP_N_Bs)) {
         return false;
       }
-      FC_INIT = true;
-      /** @todo Verify true to life timeout. */
+      // FC_INIT = true;
     }
 
-    /* POST FLOW CONTROL FRAME */
+    /** 
+     * POST FLOW CONTROL FRAME 
+     * @todo Utilization of N_Cs 
+     */
     while (len_queue(data_queue) > 0) {
-      if (FC_INIT && block_size > 0) {
+      if (FC_INIT && block_size_recv > 0) {
         /* This should decrement BS if we're not on unlimited block-sizes(BS = 0), i.e 
          * sending blocks until our data is all sent. */
-        block_size--;
-        FC_INIT = block_size > 0;
+        block_size_recv--;
+        FC_INIT = block_size_recv > 0;
       }
       while (!FC_INIT) {
         FC_INIT = CANTP_read_flow_control_frame();
-        if (getTime() > CLOCK_TIME_AT_TX + TX_TIME_LIMIT) {
+        if (!check_if_timeout(CLOCK_TIME_AT_TX, ISOTP_N_Bs)) {
           return false;
         }
+        // block_size_recv = 1;
       }
       printf("\nDLEN: %d\n", len_queue(data_queue));
       if (!CANTP_consec_frame(&ITFR_TX, data_queue, sequence++)) {
         return false;
       }
       populate_output_buffer(&ITFR_TX);
-
       print_OUTBUF();
     }
   } else {
     if (!CANTP_single_frame(&ITFR_TX, data_queue, dataLength)) {
       return false;
-    };
+    }
     populate_output_buffer(&ITFR_TX);
-
     print_OUTBUF();
   }
   return true;
@@ -161,7 +161,8 @@ bool CANTP_first_frame(ISO_TP_Frame *ITFR, queue *data_queue, uInt16 dataLength)
     ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
-  return true;
+  /* If the transmission has happened in time limits, this will return true. */
+  return true && check_if_timeout(CLOCK_TIME_AT_TX, ISOTP_N_As);
 }
 
 bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNum) {
@@ -174,12 +175,11 @@ bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNu
     ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
   }
-  return true;
+  return true && check_if_timeout(CLOCK_TIME_AT_TX, ISOTP_N_As);
 }
 
 bool CANTP_read_flow_control_frame() {
-  printf("%lu :: %lu\n", CLOCK_TIME_AT_TX + TX_TIME_LIMIT, getTime());
-  /** @FIX CLOCK_TIME_TX and getTime() results in negative integer. */
+  // printf("%lu :: %lu\n", CLOCK_TIME_AT_TX + TX_TIME_LIMIT, getTime());
   printf("\nREADING FLOW CONTROL FRAME\n");
   fptr = fopen("GPI.bin", "rb");
   if (fptr == NULL) {
@@ -195,8 +195,8 @@ bool CANTP_read_flow_control_frame() {
     return false;
   }
 
-  block_size = CAN_DATA[1];
-  STmin = CAN_DATA[2];
+  block_size_recv = CAN_DATA[1];
+  STmin_recv = CAN_DATA[2];
 
   fclose(fptr);
   return true;
@@ -225,6 +225,8 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
    * First 4 bits of each IN_BUF to verify CAN-TP frame type.
    */
   
+  setTime(&CLOCK_TIME_AT_RX);
+
   fptr = fopen("GPO.bin", "rb");
   if (fptr == NULL) {
     return false;
@@ -267,9 +269,13 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     /* We decrement the idx and udsp->dataLength, as the CAN packet accounted for the SID to be IN 
      * the data itself -- which is not the case. */
 
+    /** @todo Verify necessity of N_Br */
     while (!FC_SEND) {
-      CANTP_write_flow_control_frame(tx_addr);
-      FC_SEND = true;
+      FC_SEND = CANTP_write_flow_control_frame(tx_addr);
+      if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Ar)) {
+        return false;
+      }
+      // FC_SEND = true;
     }
     uInt8 block_size_copy = block_size_send;
     /* We'll maintain this copy to know when we have to send block_size information again. */
@@ -279,14 +285,18 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     offset = 1;
     Int16 byte_num = udsp->dataLength; /* Remaining bytes of data */
 
+    /** @todo Utilization of N_Cr */
     while (byte_num > 0) {
       if (FC_SEND && block_size_copy > 0) {
         block_size_copy--;
         FC_SEND = block_size_copy > 0;
       }
       while (!FC_SEND) {
-        CANTP_write_flow_control_frame(tx_addr);
+        FC_SEND = CANTP_write_flow_control_frame(tx_addr);
         block_size_copy = block_size_send;
+        if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Ar)) {
+          return false;
+        }
       }
       /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
        * we will have to send the FC frame again, which is what the FC_SEND boolean is for. */
