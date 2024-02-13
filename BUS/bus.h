@@ -9,8 +9,10 @@
  * where each process only picks up messages meant for it.
  */
 
-extern uInt16 CLIENT_ADDR;
-extern uInt16 SERVER_ADDR;
+typedef struct SESSION {
+  uInt16 CLIENT_ADDR;
+  uInt16 SERVER_ADDR;
+} SESSION;
 
 /** @todo I/O triggers can be simulated here. */
 

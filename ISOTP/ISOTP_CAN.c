@@ -2,7 +2,7 @@
 #include "../ISOTP/ISOTP_CAN.h"
 #include "../QUEUE/queue.h"
 #include "../SERVICER/timing.h"
-#include "../SERVICER/session.h"
+#include "../BUS/bus.h"
 
 uInt8 NULL_BUF[10] = { 0 };
 uInt8 OUT_BUF[10];
@@ -36,8 +36,7 @@ void print_OUTBUF() {
 
 void populate_output_buffer(ISO_TP_Frame *ITFR) {
   /**
-   * For now, just simulate putting the values into the OUT_BUF
-   * @todo integrate with the actual routine that deals with the GPIO 
+   * @todo call into BUS.h here.
    **/
   OUT_BUF[0] = (ITFR->addr >> 8);
   OUT_BUF[1] = (ITFR->addr);
@@ -47,7 +46,7 @@ void populate_output_buffer(ISO_TP_Frame *ITFR) {
   fclose(fptr);
 }
 
-bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
+bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
   queue *data_queue = init_queue(udsp->dataLength + 1);
   enque(data_queue, udsp->SID);
   for (uInt16 i = 0; i < udsp->dataLength; i++) {
@@ -60,7 +59,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr) {
    */
   uInt16 sequence = 1;
   uInt16 dataLength = len_queue(data_queue);
-  ITFR_TX.addr = ((rx_addr << 5) | DEFAULT_DLC);
+  ITFR_TX.addr = ((from_addr << 5) | DEFAULT_DLC);
   setTime(&CLOCK_TIME_AT_TX);
 
 

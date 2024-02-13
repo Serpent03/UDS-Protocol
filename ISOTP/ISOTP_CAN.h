@@ -93,11 +93,11 @@ bool CANTP_write_flow_control_frame(uInt16 addr);
 /**
  * @brief This generates the CAN_ID + ISO-TP frames for the given UDS packet data.
  * @param udsp the required UDS packet.
- * @param rx_addr The address to send the frames from.
+ * @param from_addr The address to send the frames from.
  * @return True if the operation was successful.
  * @FIX Effective limit is 4094 instead of 4096.
  */
-bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 rx_addr);
+bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr);
 
 /**
  * @brief Take the incoming byte stream from the GPIO and convert it to a UDS packet.
