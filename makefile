@@ -1,4 +1,4 @@
-sources = main.c UDS/UDS.c ISOTP/ISOTP_CAN.c SERVICER/timing.c SERVICER/servicer.c QUEUE/queue.c
+sources = main.c */*.c 
 cc = gcc
 ccflags = -Wall
 
@@ -7,8 +7,7 @@ main: $(sources)
 
 clean:
 	rm main
-	rm GPO.bin
-	rm GPI.bin
+	rm bus.bin
 
 push:
 	git push uds-dev master

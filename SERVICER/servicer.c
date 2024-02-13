@@ -2,6 +2,7 @@
 #include "../ISOTP/ISOTP_CAN.h"
 #include "servicer.h"
 #include "../UDS/UDS.h"
+#include "../BUS/bus.h"
 #include "timing.h"
 
 bool receiveFlag;
@@ -21,6 +22,7 @@ void servicer() {
   if (receiveFlag && idle) {
     idle = false;
     receiveFlag = false;
+    shutdown = true; /** @debug for debugging. */
     /* SYNC THE RX TIME HERE */
     bool opSuccess = receive_ISOTP_frames(&uds_rx, DEFAULT_CLIENT_ADDR);
     if (opSuccess) {
@@ -34,7 +36,7 @@ void servicer() {
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
-  uInt8 data[20] = { 0 };
+  uInt8 data[1] = { 0 };
   UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
   /* The data for transmit is decided by the parse() function, so we'll define the data here. */
   
@@ -48,7 +50,11 @@ void servicer() {
       printf("TRY %d FOR TX!\n\n", TX_RETRY_NUM);
       TX_RETRY_NUM++;
     }
-    receiveFlag = TX_RETRY_NUM < TX_RETRY_LIMIT; /* Set it to true for debug here. */
+    // receiveFlag = TX_RETRY_NUM < TX_RETRY_LIMIT; /* Set it to true for debug here. */
+  }
+
+  if (idle) {
+    check_bus();
   }
   idle = true;
   printf("CURTIME: %lu\n", CLOCK_TIME_CURRENT);
