@@ -35,13 +35,11 @@ void print_OUTBUF() {
 }
 
 void populate_output_buffer(ISO_TP_Frame *ITFR) {
-  /**
-   * @todo call into BUS.h here.
-   **/
   OUT_BUF[0] = (ITFR->addr >> 8);
   OUT_BUF[1] = (ITFR->addr);
   memcpy(&OUT_BUF[2], ITFR->data, 8);
   write_to_bus(OUT_BUF, sizeof(OUT_BUF));
+  /* write_to_bus() references into `bus.c` for writing to I/O. */
 }
 
 bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
