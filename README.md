@@ -20,10 +20,9 @@ git clone https://github.com/PupilMesh/UDSDev.git
 ```
 
 To run the implementation, do the following:
-- Run `make clean` to clean up any old GPI/O bin files.
 - Run `make`
-- Run `./main`
-- Run `make clean` again to clean up old GPI and GPO bin files.
+- Run `./main <ADDRESSING RANGE START> <ADDRESSING RANGE END>`
+- Run `make clean` to clean up `bus.bin`, where all the communication takes place.
 
 ## Overview
 
@@ -57,7 +56,6 @@ The overall program flow is:
 
 ## TODOs
 
-- Implement addressing considerations for rx/tx.
 - Implement timing controls.
 - Implement actual GPIO operations.
 - Flesh out the `parse()` function.
