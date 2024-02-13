@@ -20,7 +20,7 @@ ISO_TP_Frame ITFR_FC; /* I think I can probably do without this, will have to se
 
 uInt8 block_size_recv = 0;
 uInt8 STmin_recv = 0;
-bool FC_INIT = false;
+bool FC_INIT = true;
 
 uInt8 block_size_send = 2;
 uInt8 STMin_send = 0;
@@ -41,9 +41,7 @@ void populate_output_buffer(ISO_TP_Frame *ITFR) {
   OUT_BUF[0] = (ITFR->addr >> 8);
   OUT_BUF[1] = (ITFR->addr);
   memcpy(&OUT_BUF[2], ITFR->data, 8);
-  fptr = fopen("GPO.bin", "ab");
-  fwrite(OUT_BUF, sizeof(uInt8), 10, fptr);
-  fclose(fptr);
+  write_to_bus(OUT_BUF, sizeof(OUT_BUF));
 }
 
 bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
@@ -180,41 +178,29 @@ bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNu
 bool CANTP_read_flow_control_frame() {
   // printf("%lu :: %lu\n", CLOCK_TIME_AT_TX + TX_TIME_LIMIT, getTime());
   printf("\nREADING FLOW CONTROL FRAME\n");
-  fptr = fopen("GPI.bin", "rb");
-  if (fptr == NULL) {
+  if (!read_from_bus(IN_BUF, sizeof(IN_BUF))) {
     return false;
   }
-  fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
-
   if (memcmp(IN_BUF, NULL_BUF, 10) == 0) {
-    fclose(fptr);
     return false;
   } else if ((CAN_DATA[0] >> 4) != CAN_CODE_FLOW_CNTL_FRAME) {
-    fclose(fptr);
     return false;
   }
-
   block_size_recv = CAN_DATA[1];
   STmin_recv = CAN_DATA[2];
 
-  fclose(fptr);
   return true;
 }
 
 bool CANTP_write_flow_control_frame(uInt16 addr) {
   printf("\nWRITING FLOW CONTROL FRAME\n");
-  fcfptr = fopen("GPI.bin", "wb");
-  if (fcfptr == NULL) {
-    return false;
-  }
   
   ITFR_FC.addr = ((addr << 5) | DEFAULT_DLC);
   ITFR_FC.data[0] = (CAN_CODE_FLOW_CNTL_FRAME << 4) | (CAN_FC_FLAG_0);
   ITFR_FC.data[1] = block_size_send;
   ITFR_FC.data[2] = STMin_send;
+  populate_output_buffer(&ITFR_FC);
 
-  fwrite(&ITFR_FC, sizeof(uInt8), 10, fcfptr);
-  fclose(fcfptr);
   return true;
 }
 
@@ -226,13 +212,10 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
   
   setTime(&CLOCK_TIME_AT_RX);
 
-  fptr = fopen("GPO.bin", "rb");
-  if (fptr == NULL) {
+  if (!read_from_bus(IN_BUF, sizeof(IN_BUF))) {
     return false;
   }
-  fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr);
   if (memcmp(IN_BUF, NULL_BUF, 10) == 0) {
-    fclose(fptr);
     return false;
   } 
 
@@ -300,7 +283,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
       /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
        * we will have to send the FC frame again, which is what the FC_SEND boolean is for. */
 
-      fread(IN_BUF, sizeof(IN_BUF), sizeof(uInt8), fptr); /* Simulate INPUT pins */
+      read_from_bus(IN_BUF, sizeof(IN_BUF));
       uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
       for (uInt16 i = 0; i < lim; i++) {
         udsp->data[idx++] = CAN_DATA[i + offset];
@@ -311,10 +294,8 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     /* We accept only frames that signify they are the starting of a segmented transmission. 
      * I don't know if this behavior is realistic or not.
      */
-    fclose(fptr);
     return false;
   }
-  fclose(fptr);
   return true;
 }
 
