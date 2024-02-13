@@ -9,13 +9,10 @@ SESSION can_session;
 void set_session(uInt16 start, uInt16 end) {
   can_session.RANGE_START = start;
   can_session.RANGE_END = end;
+  printf("0x%02x :: 0x%02x\n", start, end);
 }
 
 void check_bus() {
-  /** 
-   * @todo Implement trigger based file reading. 
-   * @todo Add in address filtration.
-   */
   bus = fopen("bus.bin", "rb");
   if (bus == NULL) {
     return;
@@ -24,6 +21,7 @@ void check_bus() {
   if (memcmp(BUS_DATA, NUL_BUF, 10) == 0) {
     return;
   }
+  /** @todo Flesh the address filtration. */
   uInt16 CAN_ID = ((BUS_DATA[0] << 8) | BUS_DATA[1]) >> 5;
   if (CAN_ID < can_session.RANGE_START || CAN_ID > can_session.RANGE_END) {
     return;
