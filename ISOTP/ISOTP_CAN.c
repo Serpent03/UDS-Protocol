@@ -24,7 +24,7 @@ bool FC_INIT = true;
 
 uInt8 block_size_send = 2;
 uInt8 STMin_send = 0;
-bool FC_SEND = false;
+bool FC_SEND = true;
 
 void print_OUTBUF() {
   printf("ADDR: 0x%02X\n", (uInt16)((OUT_BUF[0] << 8) | OUT_BUF[1]) >> 5);
@@ -86,9 +86,9 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
 
     /** 
      * POST FLOW CONTROL FRAME 
-     * @todo Utilization of N_Cs 
      */
     while (len_queue(data_queue) > 0) {
+      setTime(&CLOCK_TIME_AT_TX);
       if (FC_INIT && block_size_recv > 0) {
         /* This should decrement BS if we're not on unlimited block-sizes(BS = 0), i.e 
          * sending blocks until our data is all sent. */
@@ -115,6 +115,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
     }
     populate_output_buffer(&ITFR_TX);
     print_OUTBUF();
+    _sleep(ISOTP_N_Cs);
   }
   return true;
 }
