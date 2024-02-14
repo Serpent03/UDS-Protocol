@@ -9,7 +9,7 @@ SESSION can_session;
 void set_session(uInt16 start, uInt16 end) {
   can_session.RANGE_START = start;
   can_session.RANGE_END = end;
-  printf("0x%02x :: 0x%02x\n", start, end);
+  printf("SESSION SET @ 0x%02x :: 0x%02x\n", start, end);
 }
 
 void check_bus() {

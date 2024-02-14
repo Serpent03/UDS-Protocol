@@ -36,7 +36,7 @@ void servicer() {
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
-  uInt8 data[1] = { 0 };
+  uInt8 data[5] = { 0 };
   UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
   /* The data for transmit is decided by the parse() function, so we'll define the data here. */
   
@@ -65,7 +65,7 @@ void Server_Init() {
   setTime(&CLOCK_TIME_CURRENT);
   CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
   receiveFlag = false;
-  transmitFlag = true;
+  transmitFlag = false;
   idle = true;
   shutdown = false;
 }
