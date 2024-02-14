@@ -2,6 +2,7 @@
 #include "../SERVICER/servicer.h"
 
 FILE *bus;
+FILE *debug;
 uInt8 NUL_BUF[10] = { 0 };
 uInt8 BUS_DATA[10];
 SESSION can_session;
@@ -36,6 +37,9 @@ void write_to_bus(uInt8 *OUT_BUF, size_t size) {
   bus = fopen("bus.bin", "wb");
   fwrite(OUT_BUF, sizeof(uInt8), size, bus);
   fclose(bus);
+  debug = fopen("debug.bin", "ab");
+  fwrite(OUT_BUF, sizeof(uInt8), size, debug);
+  fclose(debug);
 }
 
 bool read_from_bus(uInt8 *IN_BUF, size_t size) {
