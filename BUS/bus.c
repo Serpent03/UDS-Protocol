@@ -48,3 +48,15 @@ bool read_from_bus(uInt8 *IN_BUF, size_t size) {
   return true;
 }
 
+bool new_bus_data(uInt8 *IN_BUF, size_t size) {
+  read_from_bus(BUS_DATA, size);
+  if (memcmp(IN_BUF, BUS_DATA, size) == 0) {
+    return false;
+  } else if (BUS_DATA[2] >> 4 == CAN_CODE_FLOW_CNTL_FRAME) {
+    return false;
+  } else {
+    memcpy(IN_BUF, BUS_DATA, size);
+  }
+  return true;
+}
+

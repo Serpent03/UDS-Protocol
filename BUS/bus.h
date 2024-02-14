@@ -41,3 +41,4 @@ void write_to_bus(uInt8 *OUT_BUF, size_t size);
  */
 bool read_from_bus(uInt8 *IN_BUF, size_t size);
 
+bool new_bus_data(uInt8 *IN_BUF, size_t size);
