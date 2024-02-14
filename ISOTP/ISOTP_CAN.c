@@ -20,18 +20,24 @@ ISO_TP_Frame ITFR_FC; /* I think I can probably do without this, will have to se
 
 uInt8 block_size_recv = 0;
 uInt8 STmin_recv = 0;
-bool FC_INIT = true;
+bool FC_INIT = false;
 
-uInt8 block_size_send = 2;
+uInt8 block_size_send = 1;
 uInt8 STMin_send = 0;
-bool FC_SEND = true;
+bool FC_SEND = false;
 
 void print_OUTBUF() {
-  printf("ADDR: 0x%02X\n", (uInt16)((OUT_BUF[0] << 8) | OUT_BUF[1]) >> 5);
-  printf("_DLC: 0x%03X\n", OUT_BUF[1] & 0xF);
-  for (uInt8 i = 2; i < 10; i++) {
-    printf("%s : 0x%02X\n", i == 2 ? "PCI" : "DAT", OUT_BUF[i]);
+  for (int i = 0; i < 10; i++) {
+    printf("%02x ", OUT_BUF[i]);
   }
+  printf("\n");
+}
+
+void print_INBUF() {
+  for (int i = 0; i < 10; i++) {
+    printf("%02x ", IN_BUF[i]);
+  }
+  printf("\n");
 }
 
 void populate_output_buffer(ISO_TP_Frame *ITFR) {
@@ -83,7 +89,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
       }
       // FC_INIT = true;
     }
-    _sleep(2000); /** @debug */
+    _sleep(ISOTP_N_Cs);
 
     /** 
      * POST FLOW CONTROL FRAME 
@@ -104,7 +110,6 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
         }
         // block_size_recv = 1;
       }
-      printf("\nDLEN: %d\n", len_queue(data_queue));
       if (!CANTP_consec_frame(&ITFR_TX, data_queue, sequence++)) {
         return false;
       }
@@ -177,7 +182,6 @@ bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNu
 
 bool CANTP_read_flow_control_frame() {
   // printf("%lu :: %lu\n", CLOCK_TIME_AT_TX + TX_TIME_LIMIT, getTime());
-  printf("\nREADING FLOW CONTROL FRAME\n");
   if (!read_from_bus(IN_BUF, sizeof(IN_BUF))) {
     return false;
   }
@@ -188,19 +192,17 @@ bool CANTP_read_flow_control_frame() {
   }
   block_size_recv = CAN_DATA[1];
   STmin_recv = CAN_DATA[2];
-
+  print_INBUF();
   return true;
 }
 
 bool CANTP_write_flow_control_frame(uInt16 addr) {
-  printf("\nWRITING FLOW CONTROL FRAME\n");
-  
   ITFR_FC.addr = ((addr << 5) | DEFAULT_DLC);
   ITFR_FC.data[0] = (CAN_CODE_FLOW_CNTL_FRAME << 4) | (CAN_FC_FLAG_0);
   ITFR_FC.data[1] = block_size_send;
   ITFR_FC.data[2] = STMin_send;
   populate_output_buffer(&ITFR_FC);
-
+  print_OUTBUF();
   return true;
 }
 
@@ -247,8 +249,8 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     for (uInt8 i = 0; i < 6; i++) {
       udsp->data[idx++] = CAN_DATA[i + offset];
     }
-    idx--;
-    /* We decrement the idx and udsp->dataLength, as the CAN packet accounted for the SID to be IN 
+    print_INBUF();
+    /* We decrement udsp->dataLength, as the CAN packet accounted for the SID to be IN 
      * the data itself -- which is not the case. */
 
     /** @todo Verify necessity of N_Br */
@@ -261,13 +263,13 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     uInt8 block_size_copy = block_size_send;
     /* We'll maintain this copy to know when we have to send block_size information again. */
 
-
     /* CONSECUTIVE FRAMES */
     offset = 1;
     Int16 byte_num = udsp->dataLength; /* Remaining bytes of data */
 
-    /** @todo Utilization of N_Cr */
     while (byte_num > 0) {
+      setTime(&CLOCK_TIME_AT_RX); /* Sync clock for next packet receive. */
+
       if (FC_SEND && block_size_copy > 0) {
         block_size_copy--;
         FC_SEND = block_size_copy > 0;
@@ -282,13 +284,18 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
       /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
        * we will have to send the FC frame again, which is what the FC_SEND boolean is for. */
 
-      _sleep(1000);
-      read_from_bus(IN_BUF, sizeof(IN_BUF));
+      while (!new_bus_data(IN_BUF, sizeof(IN_BUF)) && byte_num > 7) {
+        if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Cr)) {
+          return false;
+        }
+      }
+
       uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
       for (uInt16 i = 0; i < lim; i++) {
         udsp->data[idx++] = CAN_DATA[i + offset];
       }
       byte_num -= 7;
+      print_INBUF();
     }
   } else {
     /* We accept only frames that signify they are the starting of a segmented transmission. 
