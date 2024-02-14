@@ -10,14 +10,15 @@
  * B -> rx frames
  * C -> consec frame
 */
+/** @todo Check these values to be as least as possible. */
 enum ISO_TP_TIME_LIMITS {
   ISOTP_N_As = 1000,
-  ISOTP_N_Bs = 1000,
-  ISOTP_N_Cs = 1000,
+  ISOTP_N_Bs = 10000,
+  ISOTP_N_Cs = 500,
 
   ISOTP_N_Ar = 1000,
   ISOTP_N_Br = 1000,
-  ISOTP_N_Cr = 1000,
+  ISOTP_N_Cr = 10000,
 };
 
 extern uInt64 CLOCK_TIME_AT_TX;
