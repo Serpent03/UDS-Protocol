@@ -41,4 +41,11 @@ void write_to_bus(uInt8 *OUT_BUF, size_t size);
  */
 bool read_from_bus(uInt8 *IN_BUF, size_t size);
 
+/**
+ * @brief Fetch the new bus data from the CAN bus.
+ * @param IN_BUF The input buffer to populate.
+ * @param size Size of the input buffer.
+ * @returns True if it found new data on the bus.
+ * @todo remove dependency on FILE I/O.
+ */
 bool new_bus_data(uInt8 *IN_BUF, size_t size);
