@@ -21,8 +21,11 @@ git clone https://github.com/PupilMesh/UDSDev.git
 
 To run the implementation, do the following:
 - Run `make`
-- Run `./main <ADDRESSING RANGE START> <ADDRESSING RANGE END>`
+- Run `./main <ADDRESSING RANGE START> <ADDRESSING RANGE END> <TRANSMITTER STATE>`
 - Run `make clean` to clean up `bus.bin`, where all the communication takes place.
+
+Addressing range starts from 0x000 to 0x7FF. Either type it in with the `0x` specifier, or without it. The transmitter state lets the program know if it will either transmit or only receive from other sources(as of now). An example command looks like:
+`./main 0x731 0x739 0` where the program will only active when the CAN bus brings messages with arbitration ID/addresses from 0x731 to 0x739, and will only receive messages and not pre-emptively respond.
 
 ## Overview
 
@@ -56,6 +59,6 @@ The overall program flow is:
 
 ## TODOs
 
-- Implement timing controls.
 - Implement actual GPIO operations.
 - Flesh out the `parse()` function.
+- Address mapping and resolution during conflict.
