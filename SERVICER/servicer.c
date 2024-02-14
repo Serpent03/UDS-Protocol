@@ -7,6 +7,7 @@
 
 bool receiveFlag;
 bool transmitFlag;
+bool isTransmitter;
 bool idle;
 bool shutdown;
 
@@ -23,7 +24,9 @@ void servicer() {
     idle = false;
     receiveFlag = false;
     shutdown = true; /** @debug for debugging. */
-    /* SYNC THE RX TIME HERE */
+
+    /** @FIX Receiver is repeating data frames. */
+
     bool opSuccess = receive_ISOTP_frames(&uds_rx, DEFAULT_CLIENT_ADDR);
     if (opSuccess) {
       printf("\nSID: 0x%02X\n", uds_rx.SID);
@@ -36,7 +39,7 @@ void servicer() {
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
-  uInt8 data[5] = { 0 };
+  uInt8 data[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0x69 };
   UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
   /* The data for transmit is decided by the parse() function, so we'll define the data here. */
   
@@ -55,6 +58,8 @@ void servicer() {
 
   if (idle) {
     check_bus();
+    receiveFlag = !isTransmitter && receiveFlag;
+    // isTransmitter = false;
   }
   idle = true;
   printf("CURTIME: %lu\n", CLOCK_TIME_CURRENT);
@@ -65,7 +70,8 @@ void Server_Init() {
   setTime(&CLOCK_TIME_CURRENT);
   CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
   receiveFlag = false;
-  transmitFlag = false;
+  transmitFlag = isTransmitter;
+  // isTransmitter = transmitFlag;
   idle = true;
   shutdown = false;
 }

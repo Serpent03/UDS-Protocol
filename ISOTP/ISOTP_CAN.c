@@ -83,11 +83,13 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
       }
       // FC_INIT = true;
     }
+    _sleep(2000); /** @debug */
 
     /** 
      * POST FLOW CONTROL FRAME 
      */
     while (len_queue(data_queue) > 0) {
+      _sleep(ISOTP_N_Cs);
       setTime(&CLOCK_TIME_AT_TX);
       if (FC_INIT && block_size_recv > 0) {
         /* This should decrement BS if we're not on unlimited block-sizes(BS = 0), i.e 
@@ -115,7 +117,6 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
     }
     populate_output_buffer(&ITFR_TX);
     print_OUTBUF();
-    _sleep(ISOTP_N_Cs);
   }
   return true;
 }
@@ -256,7 +257,6 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
       if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Ar)) {
         return false;
       }
-      // FC_SEND = true;
     }
     uInt8 block_size_copy = block_size_send;
     /* We'll maintain this copy to know when we have to send block_size information again. */
@@ -282,6 +282,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
       /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
        * we will have to send the FC frame again, which is what the FC_SEND boolean is for. */
 
+      _sleep(1000);
       read_from_bus(IN_BUF, sizeof(IN_BUF));
       uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
       for (uInt16 i = 0; i < lim; i++) {

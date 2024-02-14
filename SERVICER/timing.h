@@ -3,7 +3,7 @@
 #include "../common.h"
 #include <sys/time.h>
 
-#define CLOCK_CYCLE 200
+#define CLOCK_CYCLE 500
 
 /**
  * A -> sending first or single 
@@ -26,6 +26,7 @@ extern uInt64 CLOCK_TIME_AT_RX;
 /**
  * @brief Gets the current UNIX timestamp.
  * @returns Current UNIX timestamp.
+ * @todo remove dependency on OS time() calls.
  */
 uInt64 getTime();
 
@@ -33,6 +34,7 @@ uInt64 getTime();
  * @brief Sets the current UNIX timestamp inside the passed variable.
  * @param CLOCK_VAR The 64-bit unsigned integer to put the timestamp in.
  * @returns void.
+ * @todo remove dependency on OS time() calls.
  */
 void setTime(uInt64 *VAR);
 
@@ -43,3 +45,11 @@ void setTime(uInt64 *VAR);
  * @returns True if the time limit has not been exceeded.
  * */
 bool check_if_timeout(uInt64 CLOCK_TIME, enum ISO_TP_TIME_LIMITS time_limit);
+
+/**
+ * @brief Hangs the current thread until for a defined period of time.
+ * @param ms The amount of time to hang the thread in milli-secondds.
+ * @returns void.
+ * @todo remove dependency on OS time() calls.
+ */
+void _sleep(uInt64 ms);

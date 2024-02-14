@@ -14,7 +14,7 @@ typedef struct SESSION {
  * @returns void.
  * @todo remove dependency on FILE I/O.
  */
-void set_session(uInt16 start, uInt16 end);
+void set_session(uInt16 start, uInt16 end, bool isTx);
 
 /**
  * @brief Monitor the bus for any activity.

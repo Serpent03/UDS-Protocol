@@ -6,9 +6,11 @@ uInt8 NUL_BUF[10] = { 0 };
 uInt8 BUS_DATA[10];
 SESSION can_session;
 
-void set_session(uInt16 start, uInt16 end) {
+void set_session(uInt16 start, uInt16 end, bool isTx) {
   can_session.RANGE_START = start;
   can_session.RANGE_END = end;
+  isTransmitter = isTx;
+  /** @debug isTx is set to control tx/rx nodes for now. */
   printf("SESSION SET @ 0x%02x :: 0x%02x\n", start, end);
 }
 
@@ -31,7 +33,7 @@ void check_bus() {
 }
 
 void write_to_bus(uInt8 *OUT_BUF, size_t size) {
-  bus = fopen("bus.bin", "ab");
+  bus = fopen("bus.bin", "wb");
   fwrite(OUT_BUF, sizeof(uInt8), size, bus);
   fclose(bus);
 }

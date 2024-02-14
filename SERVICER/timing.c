@@ -1,5 +1,6 @@
 #include "../common.h"
 #include "timing.h"
+#include <unistd.h>
 
 /* This can stay hidden and work inside the functions. */
 struct timeval tp;
@@ -17,4 +18,12 @@ void setTime(uInt64 *CLOCK_VAR) {
 
 bool check_if_timeout(uInt64 CLOCK_TIME, enum ISO_TP_TIME_LIMITS time_limit) {
   return getTime() < CLOCK_TIME + time_limit;
-} 
+}
+
+void _sleep(uInt64 ms) {
+  uInt64 curtime;
+  setTime(&curtime);
+  while (getTime() < curtime + ms) {
+    ;
+  }
+}
