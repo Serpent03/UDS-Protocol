@@ -11,10 +11,6 @@ uInt8 *CAN_DATA = &IN_BUF[2];
 /* The first two bytes from input will be the address + DLC. We only care about the CAN data transmitted,
  * so we will refer to it using a pointer located on the third byte of the input buffer */
 
-bool INPUT_HAS_CYCLED = true;
-FILE *fptr;
-FILE *fcfptr; /* FILE ptr for the flow control frame */
-
 ISO_TP_Frame ITFR_TX;
 ISO_TP_Frame ITFR_FC; /* I think I can probably do without this, will have to see. */
 
@@ -22,7 +18,7 @@ uInt8 block_size_recv = 0;
 uInt8 STmin_recv = 0;
 bool FC_INIT = false;
 
-uInt8 block_size_send = 1;
+uInt8 block_size_send = 0;
 uInt8 STMin_send = 0;
 bool FC_SEND = false;
 
@@ -279,7 +275,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
       }
       /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
        * we will have to send the FC frame again, which is what the FC_SEND boolean is for. */
-      while (!new_bus_data(IN_BUF, sizeof(IN_BUF)) && byte_num > 7) {
+      while (!new_bus_data(IN_BUF, sizeof(IN_BUF)) && byte_num >  7) {
         if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Cr)) {
           return false;
         }
@@ -289,6 +285,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
         udsp->data[idx++] = CAN_DATA[i + offset];
       }
       byte_num -= 7;
+      print_INBUF();
     }
   } else {
     /* We accept only frames that signify they are the starting of a segmented transmission. 

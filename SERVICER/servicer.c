@@ -37,8 +37,8 @@ void servicer() {
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
-  uInt8 data[28];
-  for (Int16 i = 0; i < 28; i++) {
+  uInt8 data[55];
+  for (Int16 i = 0; i < 55; i++) {
     data[i] = i + 1;
   }
   UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
