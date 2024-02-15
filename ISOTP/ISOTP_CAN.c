@@ -270,6 +270,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
         FC_SEND = block_size_copy > 0;
       }
       while (!FC_SEND) {
+        /** @fix issues while reception from bus. */
         FC_SEND = CANTP_write_flow_control_frame(tx_addr);
         block_size_copy = block_size_send;
         if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Ar)) {
