@@ -18,7 +18,7 @@ uInt8 block_size_recv = 0;
 uInt8 STmin_recv = 0;
 bool FC_INIT = false;
 
-uInt8 block_size_send = 0;
+uInt8 block_size_send = 0xF;
 uInt8 STMin_send = 0;
 bool FC_SEND = false;
 
@@ -71,6 +71,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
       return false;
     }
     populate_output_buffer(&ITFR_TX);
+    print_OUTBUF(); /** @debug */
     /*
      * wait here until we receive the flow control frame 
      * flow control frame sets the block_size and STmin params
@@ -89,24 +90,26 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
      * POST FLOW CONTROL FRAME 
      */
     while (len_queue(data_queue) > 0) {
-      _sleep(ISOTP_N_Cs);
       setTime(&CLOCK_TIME_AT_TX);
-      if (FC_INIT && block_size_recv > 0) {
-        /* This should decrement BS if we're not on unlimited block-sizes(BS = 0), i.e 
-         * sending blocks until our data is all sent. */
-        block_size_recv--;
-        FC_INIT = block_size_recv > 0;
-      }
       while (!FC_INIT) {
         FC_INIT = CANTP_read_flow_control_frame();
         if (!check_if_timeout(CLOCK_TIME_AT_TX, ISOTP_N_Bs)) {
           return false;
         }
       }
-      if (!CANTP_consec_frame(&ITFR_TX, data_queue, sequence++)) {
+      if (FC_INIT && block_size_recv > 0) {
+        /* This should decrement BS if we're not on unlimited block-sizes(BS = 0), i.e 
+         * sending blocks until our data is all sent. */
+        block_size_recv--;
+        FC_INIT = block_size_recv > 0;
+      }
+
+      if (!CANTP_consec_frame(&ITFR_TX, data_queue, ++sequence)) {
         return false;
       }
       populate_output_buffer(&ITFR_TX);
+      print_OUTBUF(); /** @debug */
+      _sleep(ISOTP_N_Cs);
     }
   } else {
     if (!CANTP_single_frame(&ITFR_TX, data_queue, dataLength)) {
@@ -165,8 +168,8 @@ bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNu
 
   while (idx < 8) {
     bool opSuccess = at_queue_front(data_queue, &queue_data);
-    ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
     dequeue(data_queue);
+    ITFR->data[idx++] = opSuccess ? queue_data : ISOTP_PADDING;
   }
   return true && check_if_timeout(CLOCK_TIME_AT_TX, ISOTP_N_As);
 }
@@ -192,6 +195,7 @@ bool CANTP_write_flow_control_frame(uInt16 addr) {
   ITFR_FC.data[1] = block_size_send;
   ITFR_FC.data[2] = STMin_send;
   populate_output_buffer(&ITFR_FC);
+  print_OUTBUF();
   return true;
 }
 
@@ -240,10 +244,10 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     for (uInt8 i = 0; i < 5; i++) {
       udsp->data[idx++] = CAN_DATA[i + offset];
     }
+    print_INBUF();
 
     /**
      * @todo Verify necessity of N_Br
-     * @fix FC frame written twice to bus
      */
     while (!FC_SEND) {
       FC_SEND = CANTP_write_flow_control_frame(tx_addr);
@@ -260,22 +264,20 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
 
     while (byte_num > 0) {
       setTime(&CLOCK_TIME_AT_RX); /* Sync clock for next packet receive. */
-
-      if (FC_SEND && block_size_copy > 0) {
-        block_size_copy--;
-        FC_SEND = block_size_copy > 0;
-      }
       while (!FC_SEND) {
-        /** @fix issues while reception from bus. */
         FC_SEND = CANTP_write_flow_control_frame(tx_addr);
         block_size_copy = block_size_send;
         if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Ar)) {
           return false;
         }
       }
+      if (FC_SEND && block_size_copy > 0) {
+        block_size_copy--;
+        FC_SEND = block_size_copy > 0;
+      }
       /* We'll only have to send the FC frame if our block size is anything else than 0. So once we see that it is 0,
        * we will have to send the FC frame again, which is what the FC_SEND boolean is for. */
-      while (!new_bus_data(IN_BUF, sizeof(IN_BUF)) && byte_num >  7) {
+      while (!new_bus_data(IN_BUF, sizeof(IN_BUF))) {
         if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Cr)) {
           return false;
         }
@@ -283,8 +285,8 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
       uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
       for (uInt16 i = 0; i < lim; i++) {
         udsp->data[idx++] = CAN_DATA[i + offset];
+        byte_num--;
       }
-      byte_num -= 7;
       print_INBUF();
     }
   } else {

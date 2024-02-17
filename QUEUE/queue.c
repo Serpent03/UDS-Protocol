@@ -69,6 +69,8 @@ uInt16 len_queue(queue *q) {
     size = q->rear - q->front + 1;
   } else if (q->rear < q->front) {
     size = (q->rear + q->size) - q->front + 1;
+  } else if (q->rear == q->front && !queue_isempty(q)) {
+    size = 1;
   } else {
     size = 0;
   }

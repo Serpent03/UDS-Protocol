@@ -29,7 +29,8 @@ void servicer() {
     if (opSuccess) {
       printf("\nSID: 0x%02X\n", uds_rx.SID);
       for (uInt16 i = 0; i < uds_rx.dataLength; i++) {
-        printf("DAT: 0x%02X\n", uds_rx.data[i]);
+        // printf("DAT: 0x%02X\n", uds_rx.data[i]);
+        assert(uds_rx.data[i] == i);
       }
     } else {
       printf("Opfail: GPIO does not exist or it is empty.\n");
@@ -39,7 +40,7 @@ void servicer() {
   /* Here we will call the parse() function which decides on the transmit flag. */
   uInt8 data[55];
   for (Int16 i = 0; i < 55; i++) {
-    data[i] = i + 1;
+    data[i] = i;
   }
   UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
   /* The data for transmit is decided by the parse() function, so we'll define the data here. */
