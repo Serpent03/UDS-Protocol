@@ -213,6 +213,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
   if (memcmp(IN_BUF, NULL_BUF, 10) == 0) {
     return false;
   } 
+  print_INBUF(); /** @debug */
 
   if (CAN_DATA[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
     uInt8 offset = 2; /* The actual data maintains an offset from the start of packet. */
@@ -244,7 +245,6 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     for (uInt8 i = 0; i < 5; i++) {
       udsp->data[idx++] = CAN_DATA[i + offset];
     }
-    print_INBUF();
 
     /**
      * @todo Verify necessity of N_Br
@@ -260,9 +260,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
 
     /* CONSECUTIVE FRAMES */
     offset = 1;
-    Int16 byte_num = udsp->dataLength; /* Remaining bytes of data */
-
-    while (byte_num > 0) {
+    while (idx < udsp->dataLength) {
       setTime(&CLOCK_TIME_AT_RX); /* Sync clock for next packet receive. */
       while (!FC_SEND) {
         FC_SEND = CANTP_write_flow_control_frame(tx_addr);
@@ -282,10 +280,9 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
           return false;
         }
       }
-      uInt16 lim = (byte_num < 7) ? byte_num : 7; /* To prevent writing beyond allocated data size. */
+      uInt16 lim = (udsp->dataLength - idx > 7) ? 7 : udsp->dataLength - idx; /* To prevent writing beyond allocated data size. */
       for (uInt16 i = 0; i < lim; i++) {
         udsp->data[idx++] = CAN_DATA[i + offset];
-        byte_num--;
       }
       print_INBUF();
     }
