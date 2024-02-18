@@ -104,7 +104,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
         FC_INIT = block_size_recv > 0;
       }
 
-      if (!CANTP_consec_frame(&ITFR_TX, data_queue, ++sequence)) {
+      if (!CANTP_consec_frame(&ITFR_TX, data_queue, sequence++)) {
         return false;
       }
       populate_output_buffer(&ITFR_TX);
