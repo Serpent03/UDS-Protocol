@@ -22,6 +22,7 @@ void check_bus() {
     return;
   }
   fread(BUS_DATA, 10, sizeof(uInt8), bus);
+  fclose(bus);
   if (memcmp(BUS_DATA, NUL_BUF, 10) == 0) {
     return;
   }
