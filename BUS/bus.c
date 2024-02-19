@@ -5,6 +5,7 @@ FILE *bus;
 FILE *debug;
 uInt8 NUL_BUF[10] = { 0 };
 uInt8 BUS_DATA[10];
+uInt8 OLD_DATA[10];
 SESSION can_session;
 
 void set_session(uInt16 start, uInt16 end, bool isTx) {
@@ -24,13 +25,18 @@ void check_bus() {
   if (memcmp(BUS_DATA, NUL_BUF, 10) == 0) {
     return;
   }
+  if (memcmp(BUS_DATA, OLD_DATA, 10) == 0) {
+    return;
+  }
+  memcpy(OLD_DATA, BUS_DATA, 10);
+
   /** @todo Flesh the address filtration. */
   uInt16 CAN_ID = ((BUS_DATA[0] << 8) | BUS_DATA[1]) >> 5;
   if (CAN_ID < can_session.RANGE_START || CAN_ID > can_session.RANGE_END) {
     return;
   }
   receiveFlag = true;
-  /* At this point, the servicer() takes over. */
+  /* At this point, we've received a new transmission on the bus, and the servicer() takes over. */
 }
 
 void write_to_bus(uInt8 *OUT_BUF, size_t size) {
