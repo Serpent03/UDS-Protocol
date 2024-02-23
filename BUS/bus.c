@@ -23,10 +23,14 @@ void check_bus() {
   }
   fread(BUS_DATA, 10, sizeof(uInt8), bus);
   fclose(bus);
+
   if (memcmp(BUS_DATA, NUL_BUF, 10) == 0) {
     return;
-  }
-  if (memcmp(BUS_DATA, OLD_DATA, 10) == 0) {
+  } else if (memcmp(BUS_DATA, OLD_DATA, 10) == 0) {
+    return;
+  } else if (BUS_DATA[2] >> 4 == CAN_CODE_FLOW_CNTL_FRAME) {
+    return;
+  } else if (BUS_DATA[2] >> 4 == CAN_CODE_CONSEC_FRAME) {
     return;
   }
   memcpy(OLD_DATA, BUS_DATA, 10);
