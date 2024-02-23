@@ -296,6 +296,12 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
   return true;
 }
 
-
+void send_UDSonCAN(UDS_Packet *udsp, bool silenceTx, uInt16 addr) {
+    uInt8 TX_RETRY_NUM = 1;
+    while (!silenceTx && !send_ISOTP_frames(udsp, addr) && TX_RETRY_NUM < TX_RETRY_LIMIT) {
+      printf("TRY %d FOR TX!\n\n", TX_RETRY_NUM);
+      TX_RETRY_NUM++;
+    }
+}
 
 

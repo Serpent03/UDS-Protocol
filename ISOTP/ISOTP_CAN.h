@@ -5,6 +5,7 @@
 #include "../QUEUE/queue.h"
 
 #define ISOTP_PADDING 0xAA
+#define TX_RETRY_LIMIT 3
 
 enum CAN_FRAME_CODES {
   CAN_CODE_SINGLE_FRAME = 0x0,
@@ -113,4 +114,12 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr);
  * @return void.
  */
 void populate_output_buffer(ISO_TP_Frame *ITFR);
+
+/**
+ * @brief Call the send_ISOTP_frames() function with an error handling wrapper.
+ * @param udsp The UDS packet to send.
+ * @param silenceTx If true, does not transmit at all.
+ * @param addr The arbitration/address ID of the ISO-TP frame.
+ */
+void send_UDSonCAN(UDS_Packet *udsp, bool silenceTx, uInt16 addr);
 

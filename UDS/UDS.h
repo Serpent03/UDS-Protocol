@@ -54,10 +54,3 @@ extern uInt8 resp_data[4096];
  * @return void.
  */
 UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength);
-
-/**
- * @brief Perform an operation on the UDS packet we have received.
- * @param udsp The received UDS packet to perform an operation on.
- * @return An UDS packet to be sent as a reply.
- */
-UDS_Packet* parse(UDS_Packet* udsp); // at the server end

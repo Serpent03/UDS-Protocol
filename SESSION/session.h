@@ -5,8 +5,6 @@
 #include "../UDS/UDS.h"
 #include "timing.h"
 
-#define TX_RETRY_LIMIT 3
-
 extern bool receiveFlag;
 extern bool idle;
 extern bool transmitFlag;

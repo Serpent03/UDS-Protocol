@@ -3,6 +3,7 @@
 #include "session.h"
 #include "../UDS/UDS.h"
 #include "../BUS/bus.h"
+#include "../SERVICES/services.h"
 #include "timing.h"
 
 bool receiveFlag;
@@ -19,6 +20,8 @@ uInt64 CLOCK_TIME_OLD;
 uInt64 CLOCK_TIME_AT_TX;
 uInt64 CLOCK_TIME_AT_RX;
 
+UDS_Packet *tx;
+bool silenceTransmit;
 
 void servicer() {
   if (receiveFlag && idle) {
@@ -43,30 +46,21 @@ void servicer() {
   for (Int16 i = 0; i < 13; i++) {
     data[i] = i;
   }
-  UDS_Packet *tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
+  tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
   if (idle && processFlag) {
-    tx = parse(&uds_rx);
+    tx = service_handler(&uds_rx, &silenceTransmit);
     processFlag = false;
     shutdown = true; /** @debug */
 
-    uInt8 TX_RETRY_NUM = 1;
-    while (!send_ISOTP_frames(tx, DEFAULT_SERVER_ADDR + 0x8) && TX_RETRY_NUM < TX_RETRY_LIMIT) {
-      printf("TRY %d FOR TX!\n\n", TX_RETRY_NUM);
-      TX_RETRY_NUM++;
-    }
+    /** @todo Dynamic arbitration ID implementation. */
+    send_UDSonCAN(tx, silenceTransmit, DEFAULT_SERVER_ADDR + 0x8);  
   }
-  /* The data for transmit is decided by the parse() function, so we'll define the data here. */
-  
+
   if (idle && transmitFlag) {
     transmitFlag = false;
     idle = false; 
-    uInt8 TX_RETRY_NUM = 1;
 
-    /* Sync the tx time here. We'll compare time elapsed against CLOCK_TIME_TX for aborting due to timeout. */
-    while (!send_ISOTP_frames(tx, DEFAULT_SERVER_ADDR) && TX_RETRY_NUM < TX_RETRY_LIMIT) {
-      printf("TRY %d FOR TX!\n\n", TX_RETRY_NUM);
-      TX_RETRY_NUM++;
-    }
+    send_UDSonCAN(tx, false, DEFAULT_SERVER_ADDR);
     // receiveFlag = TX_RETRY_NUM < TX_RETRY_LIMIT; /* Set it to true for debug here. */
   }
 
@@ -85,6 +79,7 @@ void Server_Init() {
   CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
   receiveFlag = false;
   transmitFlag = isTransmitter;
+  silenceTransmit = false;
   // isTransmitter = transmitFlag;
   processFlag = false;
   idle = true;
