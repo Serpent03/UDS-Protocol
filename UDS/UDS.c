@@ -30,6 +30,9 @@ UDS_Packet* parse(UDS_Packet *udsp) {
       if (udsp->dataLength == 0) {
         response_code = NRC_NEGATIVE_RESPONSE;
         resp_data[idx++] = NRC_INCORRECT_MESSAGE_LENGTH;
+      } else {
+        response_code = udsp->SID + 0x40;
+        resp_data[idx++] = udsp->SID;
       }
       break;
     default:

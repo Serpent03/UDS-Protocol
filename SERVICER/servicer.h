@@ -10,6 +10,7 @@
 extern bool receiveFlag;
 extern bool idle;
 extern bool transmitFlag;
+extern bool processFlag;
 extern bool isTransmitter; /** @debug debug flag for testing multiple CAN nodes. */
 
 extern uInt64 CLOCK_TIME_START;

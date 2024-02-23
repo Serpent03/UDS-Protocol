@@ -18,7 +18,7 @@ uInt8 block_size_recv = 0;
 uInt8 STmin_recv = 0;
 bool FC_INIT = false;
 
-uInt8 block_size_send = 0xF;
+uInt8 block_size_send = 0xF; /** @todo rename */
 uInt8 STMin_send = 0;
 bool FC_SEND = false;
 
@@ -199,7 +199,7 @@ bool CANTP_write_flow_control_frame(uInt16 addr) {
   return true;
 }
 
-bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
+bool receive_ISOTP_frames(UDS_Packet *udsp) {
   /**
    * Simulate actual GPIO from FILE stream. INPUT_BUF first gets updated here.
    * First 4 bits of each IN_BUF to verify CAN-TP frame type.
@@ -214,6 +214,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     return false;
   } 
   print_INBUF(); /** @debug */
+  uInt16 ret_addr = (((IN_BUF[0] << 8) | IN_BUF[1]) >> 5) + 8;
 
   if (CAN_DATA[0] >> 4 == CAN_CODE_SINGLE_FRAME) {
     uInt8 offset = 2; /* The actual data maintains an offset from the start of packet. */
@@ -250,7 +251,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
      * @todo Verify necessity of N_Br
      */
     while (!FC_SEND) {
-      FC_SEND = CANTP_write_flow_control_frame(tx_addr);
+      FC_SEND = CANTP_write_flow_control_frame(ret_addr);
       if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Ar)) {
         return false;
       }
@@ -263,7 +264,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp, uInt16 tx_addr) {
     while (idx < udsp->dataLength) {
       setTime(&CLOCK_TIME_AT_RX); /* Sync clock for next packet receive. */
       while (!FC_SEND) {
-        FC_SEND = CANTP_write_flow_control_frame(tx_addr);
+        FC_SEND = CANTP_write_flow_control_frame(ret_addr);
         block_size_copy = block_size_send;
         if (!check_if_timeout(CLOCK_TIME_AT_RX, ISOTP_N_Ar)) {
           return false;

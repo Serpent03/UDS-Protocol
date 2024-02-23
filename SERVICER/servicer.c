@@ -8,6 +8,7 @@
 bool receiveFlag;
 bool transmitFlag;
 bool isTransmitter;
+bool processFlag;
 bool idle;
 bool shutdown;
 
@@ -23,26 +24,37 @@ void servicer() {
   if (receiveFlag && idle) {
     idle = false;
     receiveFlag = false;
-    shutdown = true; /** @debug for debugging. */
 
-    bool opSuccess = receive_ISOTP_frames(&uds_rx, DEFAULT_CLIENT_ADDR);
+    bool opSuccess = receive_ISOTP_frames(&uds_rx);
     if (opSuccess) {
       printf("\nSID: 0x%02X\n", uds_rx.SID);
       for (uInt16 i = 0; i < uds_rx.dataLength; i++) {
         // printf("DAT: 0x%02X\n", uds_rx.data[i]);
         assert(uds_rx.data[i] == i);
       }
+      processFlag = true; /* Start operation on the data */
     } else {
       printf("Opfail: GPIO does not exist or it is empty.\n");
     }
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
-  uInt8 data[155];
-  for (Int16 i = 0; i < 155; i++) {
+  uInt8 data[13];
+  for (Int16 i = 0; i < 13; i++) {
     data[i] = i;
   }
-  UDS_Packet *tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
+  UDS_Packet *tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
+  if (idle && processFlag) {
+    tx = parse(&uds_rx);
+    processFlag = false;
+    shutdown = true; /** @debug */
+
+    uInt8 TX_RETRY_NUM = 1;
+    while (!send_ISOTP_frames(tx, DEFAULT_SERVER_ADDR + 0x8) && TX_RETRY_NUM < TX_RETRY_LIMIT) {
+      printf("TRY %d FOR TX!\n\n", TX_RETRY_NUM);
+      TX_RETRY_NUM++;
+    }
+  }
   /* The data for transmit is decided by the parse() function, so we'll define the data here. */
   
   if (idle && transmitFlag) {
@@ -60,11 +72,11 @@ void servicer() {
 
   if (idle) {
     check_bus();
-    receiveFlag = !isTransmitter && receiveFlag;
+    transmitFlag = !processFlag && transmitFlag; /** @debug For testing reply-back. */
     // isTransmitter = false;
   }
   idle = true;
-  printf("CURTIME: %lu\n", CLOCK_TIME_CURRENT);
+  // printf("CURTIME: %lu\n", CLOCK_TIME_CURRENT);
 }
 
 void Server_Init() {
@@ -74,6 +86,7 @@ void Server_Init() {
   receiveFlag = false;
   transmitFlag = isTransmitter;
   // isTransmitter = transmitFlag;
+  processFlag = false;
   idle = true;
   shutdown = false;
 }
