@@ -31,10 +31,6 @@ void servicer() {
     bool opSuccess = receive_ISOTP_frames(&uds_rx);
     if (opSuccess) {
       printf("\nSID: 0x%02X\n", uds_rx.SID);
-      for (uInt16 i = 0; i < uds_rx.dataLength; i++) {
-        // printf("DAT: 0x%02X\n", uds_rx.data[i]);
-        assert(uds_rx.data[i] == i);
-      }
       processFlag = true; /* Start operation on the data */
     } else {
       printf("Opfail: GPIO does not exist or it is empty.\n");
@@ -52,14 +48,14 @@ void servicer() {
     processFlag = false;
     shutdown = true; /** @debug */
 
-    send_UDSonCAN(tx, silenceTransmit, get_reply_addr());  
+    send_UDSonCAN(tx, false, get_reply_addr());  
   }
 
   if (idle && transmitFlag) {
     transmitFlag = false;
     idle = false; 
 
-    send_UDSonCAN(tx, false, DEFAULT_SERVER_ADDR);
+    send_UDSonCAN(tx, false, get_tx_addr());
     // receiveFlag = TX_RETRY_NUM < TX_RETRY_LIMIT; /* Set it to true for debug here. */
   }
 

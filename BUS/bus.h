@@ -5,6 +5,7 @@
 typedef struct SESSION {
   uInt16 RANGE_START;
   uInt16 RANGE_END;
+  uInt16 TX_ADDR;
   uInt16 REPLY_ADDR;
 } SESSION;
 
@@ -15,7 +16,13 @@ typedef struct SESSION {
  * @return void.
  * @todo remove dependency on FILE I/O.
  */
-void set_session(uInt16 start, uInt16 end, bool isTx);
+void set_session(uInt16 start, uInt16 end, uInt16 tx, bool isTx);
+
+/**
+ * @brief Gets the transmit address/arbitration ID for the current session.
+ * @return An 11-bit CAN arbitration ID.
+ */
+uInt16 get_tx_addr();
 
 /**
  * @brief Gets the reply address/arbitration ID for the current session.

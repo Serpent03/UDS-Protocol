@@ -8,12 +8,13 @@ uInt8 BUS_DATA[10];
 uInt8 OLD_DATA[10];
 SESSION can_session;
 
-void set_session(uInt16 start, uInt16 end, bool isTx) {
+void set_session(uInt16 start, uInt16 end, uInt16 tx, bool isTx) {
   can_session.RANGE_START = start;
   can_session.RANGE_END = end;
+  can_session.TX_ADDR = tx;
   isTransmitter = isTx;
   /** @debug isTx is set to control tx/rx nodes for now. */
-  printf("SESSION SET @ 0x%02x :: 0x%02x\n", start, end);
+  printf("Listening from 0x%02x to 0x%02x\nTransmitting @ 0x%02x\n", start, end, tx);
 }
 
 void set_reply_addr(uInt16 addr) {
@@ -22,6 +23,10 @@ void set_reply_addr(uInt16 addr) {
 
 uInt16 get_reply_addr() {
   return can_session.REPLY_ADDR;
+}
+
+uInt16 get_tx_addr() {
+  return can_session.TX_ADDR;
 }
 
 void check_bus() {
@@ -48,7 +53,7 @@ void check_bus() {
   if (CAN_ID < can_session.RANGE_START || CAN_ID > can_session.RANGE_END) {
     return;
   }
-  set_reply_addr(CAN_ID);
+  set_reply_addr(CAN_ID); /** @todo Only rx only nodes can set reply addresses. */
   receiveFlag = true;
   /* At this point, we've received a new transmission on the bus, and the servicer() takes over. */
 }
