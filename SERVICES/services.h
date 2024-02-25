@@ -18,9 +18,9 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx);
  * @param rx The UDS packet to process.
  * @param resp_data The returning response data to be edited.
  * @param idx The length of the the response data.
- * @return void.
+ * @return True if the operation was successful.
  */
-void handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
+bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
 
 
 

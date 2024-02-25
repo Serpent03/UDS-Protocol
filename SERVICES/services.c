@@ -9,12 +9,10 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
 
   switch (rx->SID) {
     case SID_DIAGNOSTIC_SESS_CNTL:
-      if (rx->dataLength == 0) {
+      if (!handle_diag_sess_cntl(rx, resp_data, &idx)) {
         response_code = NRC_NEGATIVE_RESPONSE;
-        resp_data[idx++] = NRC_INCORRECT_MESSAGE_LENGTH;
       } else {
         response_code = rx->SID + 0x40;
-        handle_diag_sess_cntl(rx, resp_data, &idx);
       }
       break;
     default:
