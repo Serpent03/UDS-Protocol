@@ -16,7 +16,7 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
       }
       break;
     default:
-      response_code = rx->SID + 0x40;
+      response_code = 0x00;
       break;
   }
   tx = generate_UDS_packet(response_code, resp_data, idx);
