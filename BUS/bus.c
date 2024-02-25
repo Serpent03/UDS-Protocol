@@ -16,6 +16,14 @@ void set_session(uInt16 start, uInt16 end, bool isTx) {
   printf("SESSION SET @ 0x%02x :: 0x%02x\n", start, end);
 }
 
+void set_reply_addr(uInt16 addr) {
+  can_session.REPLY_ADDR = addr + 0x8;
+}
+
+uInt16 get_reply_addr() {
+  return can_session.REPLY_ADDR;
+}
+
 void check_bus() {
   bus = fopen("bus.bin", "rb");
   if (bus == NULL) {
@@ -40,6 +48,7 @@ void check_bus() {
   if (CAN_ID < can_session.RANGE_START || CAN_ID > can_session.RANGE_END) {
     return;
   }
+  set_reply_addr(CAN_ID);
   receiveFlag = true;
   /* At this point, we've received a new transmission on the bus, and the servicer() takes over. */
 }

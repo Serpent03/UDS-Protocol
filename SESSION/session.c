@@ -52,8 +52,7 @@ void servicer() {
     processFlag = false;
     shutdown = true; /** @debug */
 
-    /** @todo Dynamic arbitration ID implementation. */
-    send_UDSonCAN(tx, silenceTransmit, DEFAULT_SERVER_ADDR + 0x8);  
+    send_UDSonCAN(tx, silenceTransmit, get_reply_addr());  
   }
 
   if (idle && transmitFlag) {
