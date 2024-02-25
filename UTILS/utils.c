@@ -6,10 +6,11 @@ uInt16 mapToInt(char c) {
   if (c >= '0' && c <= '9') {
     _int = c - '0';
   } else if (c >= 'a' && c <= 'f') {
-    _int = c - 'a';
+    _int = c - 'a' + 10;
   } else if (c >= 'A' && c <= 'F') {
-    _int = c - 'A';
+    _int = c - 'A' + 10;
   } else {
+    printf("Not a valid hexadecimal character!\n");
     assert(false); /* Raise error and abort the program before it begins. */
   }
   return _int;
