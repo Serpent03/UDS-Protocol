@@ -14,7 +14,7 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
         resp_data[idx++] = NRC_INCORRECT_MESSAGE_LENGTH;
       } else {
         response_code = rx->SID + 0x40;
-        resp_data[idx++] = rx->SID;
+        handle_diag_sess_cntl(rx, resp_data, &idx);
       }
       break;
     default:
