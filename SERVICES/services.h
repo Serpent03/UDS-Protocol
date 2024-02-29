@@ -4,6 +4,16 @@
 #include "../UDS/UDS.h"
 
 /**
+ * @brief Sets the outgoing UDS packet SID and data to report a failure.
+ * @param rx The UDS Packet to process.
+ * @param resp_data The response data to be edited.
+ * @param idx The length of the response data.
+ * @param fail_code The failure code of the operation.
+ * @return void.
+ */
+void set_failure(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, enum NEG_RESPONSE_CODES fail_code);
+
+/**
  * @brief Return a pointer to a UDS Packet after processing data received from the bus.
  * @param rx The UDS Packet to process.
  * @param silenceTx The pointer to the flag that mutes any transmission.

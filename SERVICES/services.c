@@ -2,6 +2,13 @@
 
 uInt8 resp_data[4096];
 
+void set_failure(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, enum NEG_RESPONSE_CODES fail_code) {
+  // limit the length to two automatically for sending failure data.
+  resp_data[0] = rx->SID;
+  resp_data[1] = fail_code;
+  *idx = 2;
+}
+
 UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
   UDS_Packet *tx; 
   uInt8 response_code = 0x00;
