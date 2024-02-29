@@ -18,3 +18,5 @@ typedef int64_t Int64;
 typedef float Float32;
 typedef double Float64;
 
+// 640MB
+//

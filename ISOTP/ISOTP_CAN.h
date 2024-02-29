@@ -78,7 +78,7 @@ bool CANTP_consec_frame(ISO_TP_Frame *ITFR, queue* data_queue, uInt16 sequenceNu
 
 /**
  * @brief Sets the flow control mechanism variables(BS, STmin) for outgoing transmissions.
- * @returns True if successful.
+ * @return True if successful.
  * @todo remove dependency on FILE I/O.
  */
 bool CANTP_read_flow_control_frame();
@@ -86,7 +86,7 @@ bool CANTP_read_flow_control_frame();
 /**
  * @brief Generates a flow control frame for the sender, from the receiver side.
  * @param addr The address to write the flow control frame to.
- * @returns True if successful.
+ * @return True if successful.
  * @todo remove dependency on FILE I/O.
  */
 bool CANTP_write_flow_control_frame(uInt16 addr);
