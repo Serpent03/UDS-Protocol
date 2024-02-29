@@ -31,6 +31,9 @@ void servicer() {
     bool opSuccess = receive_ISOTP_frames(&uds_rx);
     if (opSuccess) {
       printf("\nSID: 0x%02X\n", uds_rx.SID);
+      for (int i = 0; i < uds_rx.dataLength; i++) {
+        printf("DAT: 0x%02X\n", uds_rx.data[i]);
+      }
       processFlag = true; /* Start operation on the data */
     } else {
       printf("Opfail: GPIO does not exist or it is empty.\n");
@@ -38,10 +41,7 @@ void servicer() {
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
-  uInt8 data[13];
-  for (Int16 i = 0; i < 13; i++) {
-    data[i] = i;
-  }
+  uInt8 data[] = { 0x05 };
   tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
   if (idle && processFlag) {
     tx = service_handler(&uds_rx, &silenceTransmit);

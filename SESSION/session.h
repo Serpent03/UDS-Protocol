@@ -17,19 +17,19 @@ extern uInt64 CLOCK_TIME_OLD;
 
 /**
  * @brief Initializes the server: clocks, flags etc.
- * @returns void.
+ * @return void.
  */
 void Server_Init();
 
 /**
  * @brief Runs the entire server and asssociated services.
- * @returns void.
+ * @return void.
  */
 void Server_Main();
 
 /**
  * @brief Starts the servicer, which provides receiving and transmitting services.
- * @returns void.
+ * @return void.
  */
 void servicer();
 
