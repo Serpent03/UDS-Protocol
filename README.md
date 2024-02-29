@@ -28,6 +28,9 @@ Addressing range starts from 0x000 to 0x7FF. Either type it in with the `0x` spe
 
 `./main 0x731 0x739 0x733 0` where the program will only active when the CAN bus brings messages with arbitration ID/addresses from 0x731 to 0x739, transmits only at 0x733, and will only receive messages and not pre-emptively respond.
 
+#### Testing
+To test memory usage using valgrind, run `make mem_test`. The results are printed to console.
+
 ## Overview
 
 `/ISOTP` Holds all definitions for an ISOTP packet.
