@@ -13,7 +13,7 @@ UDS_Packet uds_rx;
 UDS_Packet* generate_UDS_packet(uInt8 SID, uInt8 *data, uInt16 dataLength) {
   uds_tx.SID = SID;
   // uds_tx.data = data;
-  memcpy(uds_tx.data, data, dataLength);
+  if (data != NULL) memcpy(uds_tx.data, data, dataLength);
   uds_tx.dataLength = dataLength;
   return &uds_tx;
 }

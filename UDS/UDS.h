@@ -3,6 +3,7 @@
 #include "../common.h"
 
 enum SID_CODES {
+  SID_STATE_DEBUG = 0x0,
   SID_DIAGNOSTIC_SESS_CNTL = 0x10,
   SID_ECU_RESET = 0x11,
   SID_READ_DATA_BY_IDENT = 0x22,
