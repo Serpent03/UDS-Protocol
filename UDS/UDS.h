@@ -11,20 +11,6 @@ enum SID_CODES {
   SID_WRITE_DATA_TO_ADDR = 0x7D
 };
 
-enum SFB_CODES {
-  SID10_DEFAULT_SESSION = 0x01,
-  SID10_PROGRAM_SESSION = 0x02,
-  SID10_EXTENDED_SESSION = 0x03,
-  SID10_SAFETY_SESSION = 0x04,
-  /** @todo rewrite these enums */
-  // SFB_TESTER_PRESENT = 0x00,
-  // SFB_READ_DTC_INFORMATION = 0x02,
-  // SFB_ECU_RESET = 0x01,
-  // SFB_LINK_CNTL_1 = 0x01,
-  // SFB_LINK_CNTL_2 = 0x02,
-  // SFB_LINK_CNTL_3 = 0x03,
-};
-
 enum NEG_RESPONSE_CODES {
   // positive response codes => requesting SID + 0x40
   NRC_NEGATIVE_RESPONSE = 0x7F,
