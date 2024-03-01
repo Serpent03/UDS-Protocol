@@ -53,7 +53,7 @@ void check_bus() {
   if (CAN_ID < can_session.RANGE_START || CAN_ID > can_session.RANGE_END) {
     return;
   }
-  set_reply_addr(CAN_ID); /** @todo Only rx only nodes can set reply addresses. */
+  set_reply_addr(CAN_ID);
   receiveFlag = true;
   /* At this point, we've received a new transmission on the bus, and the servicer() takes over. */
 }

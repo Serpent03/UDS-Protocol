@@ -18,7 +18,7 @@ uInt8 block_size_recv = 0;
 uInt8 STmin_recv = 0;
 bool FC_INIT = false;
 
-uInt8 block_size_send = 0xF; /** @todo rename */
+uInt8 block_size_send = 0xF;
 uInt8 STMin_send = 0;
 bool FC_SEND = false;
 
