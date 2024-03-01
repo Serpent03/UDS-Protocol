@@ -36,14 +36,6 @@ enum ISOTP_CODES {
   DEFAULT_DLC = 0x8
 };
 
-// /**
-//  * @brief Deallocates the allocated CAN-TP frame.
-//  * @param cfr The CAN-TP frame to be deallocated.
-//  * @return void.
-//  * @META This is deprecated now.
-//  */
-// void dealloc_CANTP_frame(CAN_Frame* cfr);
-
 /**
  * @brief Takes the data_queue and the dataLength, and returns a single ISO-TP frame.
  * @param data_queue the data_queue filled with the UDS packet data.
