@@ -61,14 +61,6 @@ bool at_queue_front(queue *q, uInt8 *data);
  */
 bool at_queue_rear(queue *q, uInt8 *data);
 
-// /**
-//  * @brief Frees the queue data structure from the program memory.
-//  * @param q The queue to operate on.
-//  * @return void.
-//  * @META Deprecated now.
-//  */
-// void free_queue(queue *q);
-
 /**
  * @brief Returns a 16-bit unsigned integer containing the length of the queue.
  * @param q The queue to operate on.

@@ -36,10 +36,6 @@ enum ISOTP_CODES {
   DEFAULT_DLC = 0x8
 };
 
-/** 
- * @todo create a server loop mechanism for ECU states
- */
-
 // /**
 //  * @brief Deallocates the allocated CAN-TP frame.
 //  * @param cfr The CAN-TP frame to be deallocated.
