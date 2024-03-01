@@ -1,6 +1,7 @@
 #include "../common.h"
 #include "../ISOTP/ISOTP_CAN.h"
 #include "session.h"
+#include "state.h"
 #include "../UDS/UDS.h"
 #include "../BUS/bus.h"
 #include "../SERVICES/services.h"
@@ -41,8 +42,8 @@ void servicer() {
   }
 
   /* Here we will call the parse() function which decides on the transmit flag. */
-  uInt8 data[] = { 0x05 };
-  tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
+  uInt8 data[] = { 0x6 };
+  tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
   if (idle && processFlag) {
     tx = service_handler(&uds_rx, &silenceTransmit);
     processFlag = false;
@@ -56,7 +57,6 @@ void servicer() {
     idle = false; 
 
     send_UDSonCAN(tx, false, get_tx_addr());
-    // receiveFlag = TX_RETRY_NUM < TX_RETRY_LIMIT; /* Set it to true for debug here. */
   }
 
   if (idle) {
@@ -72,6 +72,7 @@ void Server_Init() {
   setTime(&CLOCK_TIME_START);
   setTime(&CLOCK_TIME_CURRENT);
   CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
+  set_state(STATE_DIAGNOSTIC_SESSION, 0x1); /* by default the program starts in the default diagnostic session */
   receiveFlag = false;
   transmitFlag = isTransmitter;
   silenceTransmit = false;

@@ -11,29 +11,25 @@ enum SFB_CODES {
 };
 
 void programming_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
-  set_state(STATE_DIAG_SESSION, 0x2);
+  set_state(STATE_DIAGNOSTIC_SESSION, PROGRAM_SESSION);
 }
 
 void extended_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
-  set_state(STATE_DIAG_SESSION, 0x3);
+  set_state(STATE_DIAGNOSTIC_SESSION, EXTENDED_SESSION);
 }
 
 void default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
-  set_state(STATE_DIAG_SESSION, 0x1);
+  set_state(STATE_DIAGNOSTIC_SESSION, DEFAULT_SESSION);
 }
 
 void safety_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
-  set_state(STATE_DIAG_SESSION, 0x4);
+  set_state(STATE_DIAGNOSTIC_SESSION, SAFETY_SESSION);
 }
 
 bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   // Pointers are tricky..
   if (rx->dataLength == 0) {
     set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
-    return false;
-  }
-  if (rx->data[0] > 0x04) {
-    set_failure(rx, resp_data, idx, NRC_REQUEST_OUT_OF_RANGE);
     return false;
   }
   resp_data[(*idx)++] = rx->data[0]; /* append the sub-function byte */
@@ -50,6 +46,9 @@ bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
     case SAFETY_SESSION:
       safety_session(rx, resp_data, idx);
       break;
+    default:
+      set_failure(rx, resp_data, idx, NRC_SUB_FUNCTION_NOT_SUPPLIED);
+      return false;
   }
   return true;
 }
