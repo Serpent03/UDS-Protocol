@@ -15,6 +15,10 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
   uInt16 idx = 0;
 
   switch (rx->SID) {
+    case SID_STATE_DEBUG:
+      handle_debug(rx, resp_data, &idx);
+      response_code = 0xFF;
+      break;
     case SID_DIAGNOSTIC_SESS_CNTL:
       if (!handle_diag_sess_cntl(rx, resp_data, &idx)) {
         response_code = NRC_NEGATIVE_RESPONSE;

@@ -26,6 +26,15 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx);
 /* ====== SERVICES ====== */
 
 /**
+ * @brief Wrapper function for the subroutine, which returns the state of the internal variables.
+ * @param rx The UDS Packet to process.
+ * @param resp_data The returning response data to be edited.
+ * @param idx The length of the response data.
+ * @return void.
+ */
+void handle_debug(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
+
+/**
  * @brief Wrapper function for the SID 0x10, which is the diagnostic session control.
  * @param rx The UDS packet to process.
  * @param resp_data The returning response data to be edited.

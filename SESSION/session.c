@@ -41,15 +41,19 @@ void servicer() {
     }
   }
 
-  /* Here we will call the parse() function which decides on the transmit flag. */
   uInt8 data[] = { 0x6 };
   tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
+  // if (get_debug_bool()) {
+  //   tx = generate_UDS_packet(SID_STATE_DEBUG, data, 0);
+  // }
+
   if (idle && processFlag) {
     tx = service_handler(&uds_rx, &silenceTransmit);
     processFlag = false;
-    shutdown = true; /** @debug */
+    if (isTransmitter) shutdown = true; /** @debug */
 
-    send_UDSonCAN(tx, false, get_reply_addr());  
+    /* The nodes that are only transmitters do not reply, for now. */
+    send_UDSonCAN(tx, isTransmitter, get_reply_addr());  
   }
 
   if (idle && transmitFlag) {

@@ -4,6 +4,7 @@
 #include "../ISOTP/ISOTP_CAN.h"
 #include "../UDS/UDS.h"
 #include "timing.h"
+#include "../TESTING/test.h"
 
 extern bool receiveFlag;
 extern bool idle;
