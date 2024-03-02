@@ -1,6 +1,7 @@
 #include "services.h"
 #include "../SESSION/state.h"
 #include "../UDS/UDS.h"
+#include "../UTILS/utils.h"
 
 enum SFB_CODES {
   /* Each SID file has its own SFB codes. */
@@ -32,7 +33,7 @@ bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
     set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
     return false;
   }
-  resp_data[(*idx)++] = rx->data[0]; /* append the sub-function byte */
+  insertIntoArray(resp_data, rx->data[0], idx);
   switch (rx->data[0]) {
     case PROGRAM_SESSION:
       programming_session(rx, resp_data, idx);

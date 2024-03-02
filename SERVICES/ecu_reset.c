@@ -1,6 +1,7 @@
 #include "services.h"
 #include "../SESSION/state.h"
 #include "../UDS/UDS.h"
+#include "../UTILS/utils.h"
 
 enum SFB_CODES {
   /* Each SID file has its own SFB codes. */
@@ -35,7 +36,7 @@ bool handle_ecu_reset(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
     set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
     return false;
   }
-  resp_data[(*idx)++] = rx->data[0];
+  insertIntoArray(resp_data, rx->data[0], idx);
   switch (rx->data[0]) {
     case HARD_RESET:
       hard_reset(rx, resp_data, idx);

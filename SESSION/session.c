@@ -41,7 +41,7 @@ void servicer() {
     }
   }
 
-  uInt8 data[] = { 0x6 };
+  uInt8 data[] = { 0x4 };
   tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
   // if (get_debug_bool()) {
   //   tx = generate_UDS_packet(SID_STATE_DEBUG, data, 0);
