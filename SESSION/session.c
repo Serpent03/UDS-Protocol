@@ -41,7 +41,7 @@ void servicer() {
     }
   }
 
-  uInt8 data[] = { 0x4 };
+  uInt8 data[] = { 0x6 };
   tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
   // if (get_debug_bool()) {
   //   tx = generate_UDS_packet(SID_STATE_DEBUG, data, 0);
@@ -50,7 +50,7 @@ void servicer() {
   if (idle && processFlag) {
     tx = service_handler(&uds_rx, &silenceTransmit);
     processFlag = false;
-    if (isTransmitter) shutdown = true; /** @debug */
+    shutdown = true; /** @debug */
 
     /* The nodes that are only transmitters do not reply, for now. */
     send_UDSonCAN(tx, isTransmitter, get_reply_addr());  
