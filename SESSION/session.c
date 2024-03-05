@@ -41,8 +41,8 @@ void servicer() {
     }
   }
 
-  uInt8 data[] = { 0x1 };
-  tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
+  uInt8 data[] = { };
+  tx = generate_UDS_packet(SID_TESTER_PRESENT, data, sizeof(data) / sizeof(uInt8));
   // if (get_debug_bool()) {
   //   tx = generate_UDS_packet(SID_STATE_DEBUG, data, 0);
   // }

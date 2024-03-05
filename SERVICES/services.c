@@ -38,7 +38,13 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
         response_code = rx->SID + 0x40;
       }
       break;
-
+    case SID_TESTER_PRESENT:
+      if (!handle_tester_present(rx, resp_data, &idx)) {
+        response_code = NRC_NEGATIVE_RESPONSE;
+      } else {
+        response_code = rx->SID + 0x40;
+      }
+      break;
     default:
       response_code = 0x00;
       idx = 0;
