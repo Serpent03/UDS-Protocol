@@ -41,8 +41,8 @@ void servicer() {
     }
   }
 
-  uInt8 data[] = { 0x6 };
-  tx = generate_UDS_packet(SID_ECU_RESET, data, sizeof(data) / sizeof(uInt8));
+  uInt8 data[] = { 0x3 };
+  tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
   // if (get_debug_bool()) {
   //   tx = generate_UDS_packet(SID_STATE_DEBUG, data, 0);
   // }
@@ -94,14 +94,10 @@ void Server_Main() {
     if (CLOCK_TIME_CURRENT != CLOCK_TIME_OLD) {
       CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
 
-      switch (CLOCK_TIME_CURRENT % CLOCK_CYCLE) {
-        case 0:
-          servicer();
-          continue;
-          break;
-        default:
-          break;
+      if (!!CLOCK_TIME_CURRENT % CLOCK_CYCLE) {
+        servicer();
       }
+      update_state();
     }
   }
 }
