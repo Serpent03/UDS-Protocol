@@ -18,7 +18,10 @@ enum ISO_TP_TIME_LIMITS {
 
   ISOTP_N_Ar = 1000,
   ISOTP_N_Br = 1000,
-  ISOTP_N_Cr = 10000,
+  ISOTP_N_Cr = 11545,
+
+  ISOTP_P2 = 25,
+  ISOTP_P2_EXT = 2000
 };
 
 extern uInt64 CLOCK_TIME_AT_TX;

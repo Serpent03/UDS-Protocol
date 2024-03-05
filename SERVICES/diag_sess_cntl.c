@@ -1,5 +1,6 @@
 #include "services.h"
 #include "../SESSION/state.h"
+#include "../SESSION/timing.h"
 #include "../UDS/UDS.h"
 #include "../UTILS/utils.h"
 
@@ -21,6 +22,13 @@ void extended_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
 
 void default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   set_state(STATE_DIAGNOSTIC_SESSION, DEFAULT_SESSION);
+
+  insertIntoArray(resp_data, (ISOTP_P2 >> 8) & 0xFF, idx);
+  insertIntoArray(resp_data, (ISOTP_P2) & 0xFF, idx);
+  insertIntoArray(resp_data, (ISOTP_P2_EXT >> 8), idx);
+  insertIntoArray(resp_data, (ISOTP_P2_EXT) & 0xFF, idx);
+  /** @todo generate P2 and P2extended values */
+  /** @todo verify consistency in the P2 reply data format */ 
 }
 
 void safety_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {

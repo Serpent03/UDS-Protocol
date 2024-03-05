@@ -4,7 +4,7 @@
 #include "../UDS/UDS.h"
 #include "../QUEUE/queue.h"
 
-#define ISOTP_PADDING 0xAA
+#define ISOTP_PADDING 0x00
 #define TX_RETRY_LIMIT 3
 
 enum CAN_FRAME_CODES {
