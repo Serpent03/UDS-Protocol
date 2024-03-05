@@ -12,6 +12,14 @@ enum STATE_CODES {
 #define EXTENDED_SESSION_TIMEOUT 5000 
 
 /**
+ * @brief Sets the last communication with the client to the current time.
+ * By design, it is called every time the service_handler() in '/SERVICES/services.h' fires, 
+ * which means a valid CAN arbitration ID has been detected.
+ * @return void.
+ */
+void set_last_client_call();
+
+/**
  * @brief Sets the session state.
  * @param state The session state to alter.
  * @param code The configuration for the session state.
