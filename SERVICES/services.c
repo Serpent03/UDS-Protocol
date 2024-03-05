@@ -1,4 +1,5 @@
 #include "./services.h"
+#include "../SESSION/state.h"
 
 uInt8 resp_data[4096];
 
@@ -13,6 +14,10 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
   UDS_Packet *tx; 
   uInt8 response_code = 0x00;
   uInt16 idx = 0;
+
+  /* We call this to establish the fact that the last communication happened. */
+  /* because this function can only be accessed in the case of a valid communication. */
+  set_last_client_call();
 
   switch (rx->SID) {
     case SID_STATE_DEBUG:
@@ -33,6 +38,7 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
         response_code = rx->SID + 0x40;
       }
       break;
+
     default:
       response_code = 0x00;
       idx = 0;
