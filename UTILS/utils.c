@@ -33,5 +33,5 @@ uInt16 stoh(char* string) {
 
 void insertIntoArray(uInt8 *array, uInt8 _data, uInt16 *idx) {
   /* We use this to ensure as least as possible errors during insertion into array using pointers */
-  array[*(idx)++] = _data;
+  array[(*idx)++] = _data;
 }
