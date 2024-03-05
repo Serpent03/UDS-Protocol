@@ -11,13 +11,18 @@ enum SFB_CODES {
   EXTENDED_SESSION = 0x3,
   SAFETY_SESSION = 0x4,
 };
+// if 
+// fa
+
 
 void programming_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   set_state(STATE_DIAGNOSTIC_SESSION, PROGRAM_SESSION);
+  /** @todo can't go back into branching states */
 }
 
 void extended_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   set_state(STATE_DIAGNOSTIC_SESSION, EXTENDED_SESSION);
+  /** @todo can't go back into branching states */
 }
 
 void default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
@@ -37,7 +42,7 @@ void safety_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
 
 bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   // Pointers are tricky..
-  if (rx->dataLength == 0) {
+  if (!(rx->dataLength == 1)) {
     set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
     return false;
   }

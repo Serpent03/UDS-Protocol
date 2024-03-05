@@ -22,6 +22,6 @@ uInt8 get_state(enum STATE_CODES state) {
 void update_state() {
   if (DEVICE_STATE[0] == 0x3) {
     // printf("LCC\n");
-    if (!check_if_timeout(LAST_CLIENT_CALL, EXTENDED_SESSION_TIMEOUT)) { DEVICE_STATE[0] = 0x0; printf("LCC @ $03\n"); } /* Set device state back to default session. */
+    if (!check_if_timeout(LAST_CLIENT_CALL, EXTENDED_SESSION_TIMEOUT)) { DEVICE_STATE[0] = 0x1; printf("LCC @ $03\n"); } /* Set device state back to default session. */
   }
 }

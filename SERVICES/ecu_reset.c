@@ -32,6 +32,7 @@ void disable_rapid_power_shutdown(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx)
 }
 
 bool handle_ecu_reset(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
+  // 1 byte
   if (rx->dataLength == 0) {
     set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
     return false;
