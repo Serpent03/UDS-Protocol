@@ -9,7 +9,7 @@ clean:
 	@ rm main ; rm *.bin ; rm massif.out.*
 
 debug:
-	@ xxd -c 10 -g 1 debug.bin
+	@ od -An -vtx1 -w10 debug.bin
 
 mem_test: main
 	valgrind --tool=massif --stacks=yes --time-unit=ms --massif-out-file=massif.out.rx ./main 0x731 0x731 0x000 0 &
