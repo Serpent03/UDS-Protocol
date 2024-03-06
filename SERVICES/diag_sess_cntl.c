@@ -16,13 +16,21 @@ enum SFB_CODES {
 
 
 void programming_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
+  if (get_state(STATE_DIAGNOSTIC_SESSION) == EXTENDED_SESSION) {
+    /** @todo verify correct NRC code response. */
+    set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
+    return;
+  }
   set_state(STATE_DIAGNOSTIC_SESSION, PROGRAM_SESSION);
-  /** @todo can't go back into branching states */
 }
 
 void extended_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
+  if (get_state(STATE_DIAGNOSTIC_SESSION) == PROGRAM_SESSION) {
+    /** @todo verify correct NRC code response. */
+    set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
+    return;
+  }
   set_state(STATE_DIAGNOSTIC_SESSION, EXTENDED_SESSION);
-  /** @todo can't go back into branching states */
 }
 
 void default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
