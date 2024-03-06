@@ -41,16 +41,13 @@ void servicer() {
     }
   }
 
-  uInt8 data[] = { 0x1, 0x85 };
+  uInt8 data[] = { 0x3 };
   tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
-  // if (get_debug_bool()) {
-  //   tx = generate_UDS_packet(SID_STATE_DEBUG, data, 0);
-  // }
 
   if (idle && processFlag) {
     tx = service_handler(&uds_rx, &silenceTransmit);
     processFlag = false;
-    shutdown = true; /** @debug */
+    // shutdown = true; /** @debug */
 
     /* The nodes that are only transmitters do not reply, for now. */
     send_UDSonCAN(tx, isTransmitter, get_reply_addr());  

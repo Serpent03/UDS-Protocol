@@ -1,12 +1,14 @@
-sources = main.c */*.c 
+sources = main.c UTILS/*.c SERVICES/*.c SESSION/*.c QUEUE/*.c ISOTP/*.c BUS/*.c UDS/*.c
+test_sources = */*.c
 cc = gcc
 ccflags = -Wall
 
 main: $(sources)
 	$(cc) -o main $(sources) $(ccflags)
+	$(cc) -o test $(test_sources) $(ccflags)
 
 clean:
-	@ rm main ; rm *.bin ; rm massif.out.*
+	@ rm main ; rm test ; rm *.bin ; rm massif.out*
 
 debug:
 	@ od -An -vtx1 -w10 debug.bin

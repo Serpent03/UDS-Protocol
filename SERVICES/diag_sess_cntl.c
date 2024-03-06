@@ -11,29 +11,28 @@ enum SFB_CODES {
   EXTENDED_SESSION = 0x3,
   SAFETY_SESSION = 0x4,
 };
-// if 
-// fa
 
-
-void programming_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
+bool programming_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (get_state(STATE_DIAGNOSTIC_SESSION) == EXTENDED_SESSION) {
     /** @todo verify correct NRC code response. */
-    set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
-    return;
+    set_failure(rx, resp_data, idx, NRC_SECURITY_ACCESS_DENIED);
+    return false;
   }
   set_state(STATE_DIAGNOSTIC_SESSION, PROGRAM_SESSION);
+  return true;
 }
 
-void extended_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
+bool extended_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (get_state(STATE_DIAGNOSTIC_SESSION) == PROGRAM_SESSION) {
     /** @todo verify correct NRC code response. */
-    set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
-    return;
+    set_failure(rx, resp_data, idx, NRC_SECURITY_ACCESS_DENIED);
+    return false;
   }
   set_state(STATE_DIAGNOSTIC_SESSION, EXTENDED_SESSION);
+  return true;
 }
 
-void default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
+bool default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   set_state(STATE_DIAGNOSTIC_SESSION, DEFAULT_SESSION);
 
   insertIntoArray(resp_data, (ISOTP_P2 >> 8) & 0xFF, idx);
@@ -42,10 +41,12 @@ void default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   insertIntoArray(resp_data, (ISOTP_P2_EXT) & 0xFF, idx);
   /** @todo generate P2 and P2extended values */
   /** @todo verify consistency in the P2 reply data format */ 
+  return true;
 }
 
-void safety_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
+bool safety_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   set_state(STATE_DIAGNOSTIC_SESSION, SAFETY_SESSION);
+  return true;
 }
 
 bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
@@ -55,22 +56,24 @@ bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
     return false;
   }
   insertIntoArray(resp_data, rx->data[0], idx);
+  bool opSuccess = true;
+
   switch (rx->data[0]) {
     case PROGRAM_SESSION:
-      programming_session(rx, resp_data, idx);
+      opSuccess = programming_session(rx, resp_data, idx);
       break;
     case DEFAULT_SESSION:
-      default_session(rx, resp_data, idx);
+      opSuccess = default_session(rx, resp_data, idx);
       break;
     case EXTENDED_SESSION:
-      extended_session(rx, resp_data, idx);
+      opSuccess = extended_session(rx, resp_data, idx);
       break;
     case SAFETY_SESSION:
-      safety_session(rx, resp_data, idx);
+      opSuccess = safety_session(rx, resp_data, idx);
       break;
     default:
       set_failure(rx, resp_data, idx, NRC_SUB_FUNCTION_NOT_SUPPLIED);
       return false;
   }
-  return true;
+  return true && opSuccess;
 }
