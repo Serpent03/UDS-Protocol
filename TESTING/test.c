@@ -19,10 +19,8 @@ int main(int argc, char **argv) {
   }
   uInt8 TEST_PACKET[10];
   for (int i = 1; i < 11; i++) {
-    TEST_PACKET[i] = stoh(argv[i]);
+    TEST_PACKET[i-1] = stoh(argv[i]);
   }
-  for (int i = 0; i < 10; i++) {
-    printf("%02x ", TEST_PACKET[i]);
-  }
+  write_to_bus(TEST_PACKET, sizeof(TEST_PACKET));
   return 0;
 }
