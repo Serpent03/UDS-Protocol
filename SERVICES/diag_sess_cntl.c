@@ -12,33 +12,36 @@ enum SFB_CODES {
   SAFETY_SESSION = 0x4,
 };
 
+void add_timing_params(uInt8 *resp_data, uInt16 *idx) {
+  insertIntoArray(resp_data, (ISOTP_P2 >> 8) & 0xFF, idx);
+  insertIntoArray(resp_data, (ISOTP_P2) & 0xFF, idx);
+  insertIntoArray(resp_data, (ISOTP_P2_EXT >> 8), idx);
+  insertIntoArray(resp_data, (ISOTP_P2_EXT) & 0xFF, idx);
+}
+
 bool programming_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (get_state(STATE_DIAGNOSTIC_SESSION) == EXTENDED_SESSION) {
-    /** @todo verify correct NRC code response. */
     set_failure(rx, resp_data, idx, NRC_SECURITY_ACCESS_DENIED);
     return false;
   }
   set_state(STATE_DIAGNOSTIC_SESSION, PROGRAM_SESSION);
+  add_timing_params(resp_data, idx);
   return true;
 }
 
 bool extended_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (get_state(STATE_DIAGNOSTIC_SESSION) == PROGRAM_SESSION) {
-    /** @todo verify correct NRC code response. */
     set_failure(rx, resp_data, idx, NRC_SECURITY_ACCESS_DENIED);
     return false;
   }
   set_state(STATE_DIAGNOSTIC_SESSION, EXTENDED_SESSION);
+  add_timing_params(resp_data, idx);
   return true;
 }
 
 bool default_session(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   set_state(STATE_DIAGNOSTIC_SESSION, DEFAULT_SESSION);
-
-  insertIntoArray(resp_data, (ISOTP_P2 >> 8) & 0xFF, idx);
-  insertIntoArray(resp_data, (ISOTP_P2) & 0xFF, idx);
-  insertIntoArray(resp_data, (ISOTP_P2_EXT >> 8), idx);
-  insertIntoArray(resp_data, (ISOTP_P2_EXT) & 0xFF, idx);
+  add_timing_params(resp_data, idx);
   /** @todo generate P2 and P2extended values */
   /** @todo verify consistency in the P2 reply data format */ 
   return true;
