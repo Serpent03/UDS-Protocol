@@ -3,6 +3,10 @@
 #include "../common.h"
 #include "session.h"
 
+/**
+ * 0 => Used for maintaining information on device diagnostic session.
+ * 1 => Status of the security access.
+ */
 extern uInt8 DEVICE_STATE[2]; /* All the session states are stored in here. */
 
 enum STATE_CODES {

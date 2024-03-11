@@ -5,6 +5,8 @@
 uInt8 DEVICE_STATE[2];
 uInt64 LAST_CLIENT_CALL;
 
+/** @todo set up ENUM codes for state conditions */
+
 void set_last_client_call() {
   LAST_CLIENT_CALL = getTime();
 }
@@ -20,8 +22,8 @@ uInt8 get_state(enum STATE_CODES state) {
 }
 
 void update_state() {
-  if (DEVICE_STATE[0] == 0x3) {
+  if (DEVICE_STATE[0] == 0x3 || DEVICE_STATE[0] == 0x2) {
     // printf("LCC\n");
-    if (!check_if_timeout(LAST_CLIENT_CALL, EXTENDED_SESSION_TIMEOUT)) { DEVICE_STATE[0] = 0x1; printf("LCC @ $03\n"); } /* Set device state back to default session. */
+    if (!check_if_timeout(LAST_CLIENT_CALL, EXTENDED_SESSION_TIMEOUT)) { DEVICE_STATE[0] = 0x1; printf("PRIVILEGE TIMEOUT\n"); } /* Set device state back to default session. */
   }
 }
