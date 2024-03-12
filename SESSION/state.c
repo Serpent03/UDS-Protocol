@@ -1,6 +1,7 @@
 #include "../common.h"
 #include "state.h"
 #include "timing.h"
+#include <string.h>
 
 uInt8 DEVICE_STATE[3];
 uInt64 LAST_CLIENT_CALL;
@@ -30,6 +31,12 @@ void update_state() {
   }
   if (DEVICE_STATE[1] == 0xFF) {
     /* Allow security requests again. */
-    if (!check_if_timeout(LAST_SECURITY_CALL, SECURITY_REQUEST_TIMEOUT)) { DEVICE_STATE[STATE_REQUEST_SERVICE] = 0x00 ; printf("AVAILABLE FOR SEC TRY AGAIN\n"); }
+    if (!check_if_timeout(LAST_SECURITY_CALL, SECURITY_REQUEST_TIMEOUT)) { DEVICE_STATE[STATE_SECURITY_SERVICE] = 0x00 ; printf("AVAILABLE FOR SEC TRY AGAIN\n"); }
   }
+}
+
+void state_initialize() {
+  memset(DEVICE_STATE, 0, 3);
+  set_state(STATE_DIAGNOSTIC_SESSION, 0x1); /* by default the program starts in the default diagnostic session */
+  set_state(STATE_SECURITY_SERVICE, 0x0);
 }

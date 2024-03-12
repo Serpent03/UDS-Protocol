@@ -12,13 +12,14 @@ extern uInt8 DEVICE_STATE[3]; /* All the session states are stored in here. */
 
 enum STATE_CODES {
   STATE_DIAGNOSTIC_SESSION = 0,
-  STATE_REQUEST_SERVICE = 1,
+  STATE_SECURITY_SERVICE = 1,
 };
 
 #define EXTENDED_SESSION_TIMEOUT 5000 
 #define SECURITY_REQUEST_TIMEOUT 1000
-#define SECURITY_KEY 42 /** @todo generate this randomly */
-#define SECURITY_SEED 2 
+#define SECURITY_REQUEST_MAX_TRY 3
+#define SECURITY_KEY (uInt32) 0xCCBBAAFF /** @todo generate this randomly */
+#define SECURITY_SEED (uInt32) 0xFFAABBCC 
 
 /**
  * @brief Sets the last communication with the client to the current time.
@@ -48,5 +49,12 @@ uInt8 get_state(enum STATE_CODES state);
  * This functions as a "maintainer" of sorts, where it sets the relevant states every x or so seconds.
  * For example, this checks if a "tester-present" service has been requested every 5000ms, otherwise
  * it switches from the extended diagnostic session back to the default session.
+ * @return void.
  */
 void update_state();
+
+/**
+ * @brief Called to initialize all the state variables to their appropriate values.
+ * @return void.
+ */
+void state_initialize();

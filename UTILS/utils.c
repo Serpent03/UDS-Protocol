@@ -35,3 +35,10 @@ void insertIntoArray(uInt8 *array, uInt8 _data, uInt16 *idx) {
   /* We use this to ensure as least as possible errors during insertion into array using pointers */
   array[(*idx)++] = _data;
 }
+
+void insertInArraytoByte(uInt8 *array, uInt16 *idx, void *_data, size_t size) {
+  for (uInt16 i = size - 1; i >= 0; i--) {
+    /** @todo complete this function. */
+    // insertIntoArray(array, , idx);
+  }
+}

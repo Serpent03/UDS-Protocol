@@ -73,7 +73,6 @@ void Server_Init() {
   setTime(&CLOCK_TIME_START);
   setTime(&CLOCK_TIME_CURRENT);
   CLOCK_TIME_OLD = CLOCK_TIME_CURRENT;
-  set_state(STATE_DIAGNOSTIC_SESSION, 0x1); /* by default the program starts in the default diagnostic session */
   receiveFlag = false;
   transmitFlag = isTransmitter;
   silenceTransmit = false;
@@ -81,6 +80,8 @@ void Server_Init() {
   processFlag = false;
   idle = true;
   shutdown = false;
+
+  state_initialize();
 }
 
 void Server_Main() {
