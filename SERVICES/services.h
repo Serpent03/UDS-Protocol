@@ -53,6 +53,15 @@ bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
 bool handle_ecu_reset(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
 
 /**
+ * @brief Wrapper function for the SID 0x27, which is the security access service.
+ * @param rx The UDS packet to process.
+ * @param resp_data The returning response data.
+ * @param idx The length of the response data.
+ * @return True if the operation was successful.
+ */
+bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
+
+/**
  * @brief Wrapper function for the SID 0x3E, which is the tester present.
  * @param rx The UDS packet to process.
  * @param resp_data The returning response data.
@@ -60,6 +69,7 @@ bool handle_ecu_reset(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
  * @return True if the operation was successful.
  */
 bool handle_tester_present(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
+
 
 
 

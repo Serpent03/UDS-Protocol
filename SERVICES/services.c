@@ -45,6 +45,13 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
         response_code = rx->SID + 0x40;
       }
       break;
+    case SID_SECURITY_ACCESS_SERVICE:
+      if (!handle_security_access(rx, resp_data, &idx)) {
+        response_code = NRC_NEGATIVE_RESPONSE;
+      } else {
+        response_code = rx->SID + 0x40;
+      }
+      break;
     default:
       response_code = 0x00;
       idx = 0;
