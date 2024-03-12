@@ -59,6 +59,7 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
       set_failure(rx, resp_data, idx, NRC_REQUEST_SEQUENCE_ERROR);
     }
   } else {
+    printf("REQ\n");
     /* Tester is trying to validate his key against our secret key now. */
     uInt32 client_request_key = rx->data[1] << 24 | rx->data[2] << 16 | rx->data[3] << 8 | rx->data[4];
     if (client_request_key == SECURITY_KEY) {
@@ -69,18 +70,13 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
       return true;
     } else {
       set_failure(rx, resp_data, idx, NRC_INVALID_KEY);
-      if (current_security_level + 0x10 >= 0x30) {
-        set_state(STATE_SECURITY_SERVICE, 0xFF); /* if we've exhausted more than three tries. */
-      } else {
-        printf("TIMEOUT ON SECURITY SERVICE!\n"); /** @debug */
-        set_state(STATE_SECURITY_SERVICE, current_security_level + 0x10); /* we increment 0x01 to 0x11 on a failure. */
-      }
       return false;
     }
   }
-
-  return true;
+  return false; /* All successful operations must be returned inside the if/else scope. */ 
 }
+
+/** @todo fix negative response mechanism(security request timeout) */
 
 bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (rx->dataLength < 1) {
@@ -92,5 +88,15 @@ bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
     return false;
   }
   insertIntoArray(resp_data, rx->data[0], idx);
-  return true && handle_access_escalation(rx, resp_data, idx);
+  if (!handle_access_escalation(rx, resp_data, idx)) {
+    uInt8 current_security_level = get_state(STATE_SECURITY_SERVICE);
+    if (current_security_level + 0x10 >= 0x30) {
+      set_state(STATE_SECURITY_SERVICE, 0xFF); /* if we've exhausted more than three tries. */
+    } else {
+      printf("TIMEOUT ON SECURITY SERVICE!\n"); /** @debug */
+      set_state(STATE_SECURITY_SERVICE, current_security_level + 0x10); /* we increment 0x01 to 0x11 on a failure. */
+    }
+    return false;
+  }
+  return true;
 }
