@@ -24,12 +24,12 @@ uInt8 get_state(enum STATE_CODES state) {
 }
 
 void update_state() {
-  if (DEVICE_STATE[0] == 0x3 || DEVICE_STATE[0] == 0x2) {
+  if (DEVICE_STATE[STATE_DIAGNOSTIC_SESSION] == 0x3 || DEVICE_STATE[STATE_DIAGNOSTIC_SESSION] == 0x2) {
     // printf("LCC\n");
     /* Set device state back to default session. */
     if (!check_if_timeout(LAST_CLIENT_CALL, EXTENDED_SESSION_TIMEOUT)) { DEVICE_STATE[STATE_DIAGNOSTIC_SESSION] = 0x1; printf("PRIVILEGE TIMEOUT\n"); } 
   }
-  if (DEVICE_STATE[1] == 0xFF) {
+  if (DEVICE_STATE[STATE_SECURITY_SERVICE] == 0xFF) {
     /* Allow security requests again. */
     if (!check_if_timeout(LAST_SECURITY_CALL, SECURITY_REQUEST_TIMEOUT)) { DEVICE_STATE[STATE_SECURITY_SERVICE] = 0x00 ; printf("AVAILABLE FOR SEC TRY AGAIN\n"); }
   }

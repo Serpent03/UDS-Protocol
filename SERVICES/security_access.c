@@ -7,14 +7,18 @@
 enum {
   RQST_LV_1 = 0x1,
   RQST_LV_3 = 0x3,
-  RQST_LV_5 = 0x5
+  RQST_LV_5 = 0x5,
+  RQST_LV_7 = 0x7
 };
 
+uInt8 SEED[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+uInt8 KEY[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+
 /**
- * @todo implement security level request
- * @todo implement seed generation
- * @todo implement seed validation
+ * @todo implement seed generation function
+ * @todo implement seed validation function
  * @todo implement negative seed response timeout
+ * @todo extended diagnostic session/programming session before security access.
  */
 
 /**
@@ -34,6 +38,19 @@ enum {
  * The state enters request timeout when exceeding 3 tries.
  */
 
+void seed_generation(uInt8 *resp_data, uInt16 *idx) {
+  for (uInt8 i = 0; i < 8; i++) {
+    insertIntoArray(resp_data, SEED[i], idx);
+  }
+}
+
+bool seed_validation(uInt8 *client_key) {
+  for (uInt8 i = 0; i < 8; i++) {
+    printf("%d == %d\n", client_key[i], KEY[i]);
+  }
+  return true;
+}
+
 bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   uInt8 current_security_level = get_state(STATE_SECURITY_SERVICE);
   uInt8 request_security_level = rx->data[0];
@@ -47,22 +64,19 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (is_requesting_seed) {
     if (request_security_level == current_security_level + 1) {
       /* Return the seed. */
-      insertIntoArray(resp_data, SECURITY_SEED >> 24 & 0xFF, idx);
-      insertIntoArray(resp_data, SECURITY_SEED >> 16 & 0xFF, idx);
-      insertIntoArray(resp_data, SECURITY_SEED >> 8 & 0xFF, idx);
-      insertIntoArray(resp_data, SECURITY_SEED & 0xFF, idx);
+      seed_generation(resp_data, idx);
       return true;
     } else if (request_security_level < current_security_level) {
-      /** @todo return an error here..? We've already accessed this level. Do we ignore this request? */
-      return true;
+      set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
+      return false;
     } else {
       set_failure(rx, resp_data, idx, NRC_REQUEST_SEQUENCE_ERROR);
     }
   } else {
-    printf("REQ\n");
     /* Tester is trying to validate his key against our secret key now. */
-    uInt32 client_request_key = rx->data[1] << 24 | rx->data[2] << 16 | rx->data[3] << 8 | rx->data[4];
-    if (client_request_key == SECURITY_KEY) {
+    uInt8 *client_key = &rx->data[1];
+    /** @todo shift to an array reconstructed from UDS data. */
+    if (seed_validation(client_key)) {
       set_state(STATE_SECURITY_SERVICE, current_security_level + 2);
       return true;
     } else if (request_security_level < current_security_level) {
@@ -84,16 +98,27 @@ bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
     return false;
   }
   if (rx->data[0] % 2 == 0 && rx->dataLength != 5) {
-    set_failure(rx, resp_data, idx, NRC_SUB_FUNCTION_NOT_SUPPLIED);
+    set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
     return false;
   }
+  if (get_state(STATE_DIAGNOSTIC_SESSION) < 0x2) {
+    set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
+    return false;
+  }
+  // if (rx->data[0] % 2 != 0) {
+  //   switch(rx->data[0]) {
+  //     default:
+  //       set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
+  //       return false;
+  //   }
+  // }
   insertIntoArray(resp_data, rx->data[0], idx);
   if (!handle_access_escalation(rx, resp_data, idx)) {
     uInt8 current_security_level = get_state(STATE_SECURITY_SERVICE);
     if (current_security_level + 0x10 >= 0x30) {
       set_state(STATE_SECURITY_SERVICE, 0xFF); /* if we've exhausted more than three tries. */
     } else {
-      printf("TIMEOUT ON SECURITY SERVICE!\n"); /** @debug */
+      printf("WRONG KEY!\n"); /** @debug */
       set_state(STATE_SECURITY_SERVICE, current_security_level + 0x10); /* we increment 0x01 to 0x11 on a failure. */
     }
     return false;

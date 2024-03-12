@@ -15,11 +15,9 @@ enum STATE_CODES {
   STATE_SECURITY_SERVICE = 1,
 };
 
-#define EXTENDED_SESSION_TIMEOUT 5000 
-#define SECURITY_REQUEST_TIMEOUT 1000
+#define EXTENDED_SESSION_TIMEOUT 50000 
+#define SECURITY_REQUEST_TIMEOUT 10000
 #define SECURITY_REQUEST_MAX_TRY 3
-#define SECURITY_KEY (uInt32) 0xCCBBAAFF /** @todo generate this randomly */
-#define SECURITY_SEED (uInt32) 0xFFAABBCC 
 
 /**
  * @brief Sets the last communication with the client to the current time.
