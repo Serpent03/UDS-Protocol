@@ -36,6 +36,13 @@ void print_INBUF() {
   printf("\n");
 }
 
+void init_CAN_bus() {
+  block_size_recv = 0;
+  STmin_recv = 0;
+  FC_INIT = false;
+  FC_SEND = false;
+}
+
 void populate_output_buffer(ISO_TP_Frame *ITFR) {
   OUT_BUF[0] = (ITFR->addr >> 8);
   OUT_BUF[1] = (ITFR->addr);
@@ -50,6 +57,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
   for (uInt16 i = 0; i < udsp->dataLength; i++) {
     enque(data_queue, udsp->data[i]);
   }
+  init_CAN_bus();
 
   /* 
    * The address is 11-bits. Assuming last 5 bits can be used 
@@ -109,7 +117,7 @@ bool send_ISOTP_frames(UDS_Packet *udsp, uInt16 from_addr) {
       }
       populate_output_buffer(&ITFR_TX);
       print_OUTBUF(); /** @debug */
-      _sleep(ISOTP_N_Cs);
+      _sleep(ISOTP_P2);
     }
   } else {
     if (!CANTP_single_frame(&ITFR_TX, data_queue, dataLength)) {
@@ -206,6 +214,7 @@ bool receive_ISOTP_frames(UDS_Packet *udsp) {
    */
   
   setTime(&CLOCK_TIME_AT_RX);
+  init_CAN_bus();
 
   if (!read_from_bus(IN_BUF, sizeof(IN_BUF))) {
     return false;
