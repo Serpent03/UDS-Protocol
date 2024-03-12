@@ -28,7 +28,7 @@ void servicer() {
   if (receiveFlag && idle) {
     idle = false;
     receiveFlag = false;
-
+    printf("NEW TX\n");
     bool opSuccess = receive_ISOTP_frames(&uds_rx);
     if (opSuccess) {
       printf("\nSID: 0x%02X\n", uds_rx.SID);
@@ -37,12 +37,13 @@ void servicer() {
       }
       processFlag = true; /* Start operation on the data */
     } else {
-      printf("Opfail: GPIO does not exist or it is empty.\n");
+      printf("RX fail!\n");
     }
+    // reset_bus();
   }
 
-  uInt8 data[] = { 0x3 };
-  tx = generate_UDS_packet(SID_DIAGNOSTIC_SESS_CNTL, data, sizeof(data) / sizeof(uInt8));
+  uInt8 data[] = { 3, 4, 5, 6, 7, 8, 9, 10 };
+  tx = generate_UDS_packet(SID_WRITE_DATA_TO_ADDR, data, sizeof(data) / sizeof(uInt8));
 
   if (idle && processFlag) {
     tx = service_handler(&uds_rx, &silenceTransmit);
@@ -60,12 +61,12 @@ void servicer() {
     send_UDSonCAN(tx, false, get_tx_addr());
   }
 
+  idle = true;
   if (idle) {
     check_bus();
     transmitFlag = !processFlag && transmitFlag; /** @debug For testing reply-back. */
     // isTransmitter = false;
   }
-  idle = true;
   // printf("CURTIME: %lu\n", CLOCK_TIME_CURRENT);
 }
 
