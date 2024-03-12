@@ -55,7 +55,7 @@ bool handle_ecu_reset(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
       enable_rapid_power_shutdown(rx, resp_data, idx);
       break;
     default:
-      set_failure(rx, resp_data, idx, NRC_SUB_FUNCTION_NOT_SUPPLIED);
+      set_failure(rx, resp_data, idx, NRC_SUB_FUNCTION_NOT_SUPPORTED);
       return false;
   }
   return true;

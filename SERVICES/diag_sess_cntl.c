@@ -75,7 +75,7 @@ bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
       opSuccess = safety_session(rx, resp_data, idx);
       break;
     default:
-      set_failure(rx, resp_data, idx, NRC_SUB_FUNCTION_NOT_SUPPLIED);
+      set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
       return false;
   }
   return true && opSuccess;
