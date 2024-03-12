@@ -38,6 +38,12 @@ uInt16 get_reply_addr();
 void set_reply_addr(uInt16 addr);
 
 /**
+ * @brief Reset the bus after a failed transmission.
+ * @return void.
+ */
+void reset_bus();
+
+/**
  * @brief Monitor the bus for any activity.
  * @return void.
  * @todo remove dependency on FILE I/O.

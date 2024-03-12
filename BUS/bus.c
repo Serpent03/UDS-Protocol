@@ -29,6 +29,11 @@ uInt16 get_tx_addr() {
   return can_session.TX_ADDR;
 }
 
+void reset_bus() {
+  /* allow new retries. */
+  memset(BUS_DATA, rand() & 0xFF, 10);
+}
+
 void check_bus() {
   bus = fopen("bus.bin", "rb");
   if (bus == NULL) {
