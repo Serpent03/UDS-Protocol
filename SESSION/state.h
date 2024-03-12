@@ -5,15 +5,20 @@
 
 /**
  * 0 => Used for maintaining information on device diagnostic session.
- * 1 => Status of the security access.
+ * 1 => Status of the security access service.
+ * All individual definitions are in the SERVICES/ files.
  */
-extern uInt8 DEVICE_STATE[2]; /* All the session states are stored in here. */
+extern uInt8 DEVICE_STATE[3]; /* All the session states are stored in here. */
 
 enum STATE_CODES {
   STATE_DIAGNOSTIC_SESSION = 0,
+  STATE_REQUEST_SERVICE = 1,
 };
 
 #define EXTENDED_SESSION_TIMEOUT 5000 
+#define SECURITY_REQUEST_TIMEOUT 1000
+#define SECURITY_KEY 42 /** @todo generate this randomly */
+#define SECURITY_SEED 2 
 
 /**
  * @brief Sets the last communication with the client to the current time.
