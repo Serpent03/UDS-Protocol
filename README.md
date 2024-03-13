@@ -68,5 +68,4 @@ The overall program flow is:
 ## TODOs
 
 - Implement actual GPIO operations.
-- Flesh out the `parse()` function.
 - Remove dependency on OS specific libs like <time.h>

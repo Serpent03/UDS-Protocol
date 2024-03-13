@@ -13,6 +13,10 @@ void set_last_client_call() {
   LAST_CLIENT_CALL = getTime();
 }
 
+void set_last_security_call() {
+  LAST_SECURITY_CALL = getTime();
+}
+
 void set_state(enum STATE_CODES state, uInt8 code) {
   DEVICE_STATE[state] = code;  
   set_last_client_call();

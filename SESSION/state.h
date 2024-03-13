@@ -28,6 +28,14 @@ enum STATE_CODES {
 void set_last_client_call();
 
 /**
+ * @brief Sets the time of the last security call for the security access service.
+ * It is called every time the access_security_escalation() handler is called inside
+ * the security access service function wrapper in `/SERVICES/security_access.c`
+ * @return void.
+ */
+void set_last_security_call();
+
+/**
  * @brief Sets the session state.
  * @param state The session state to alter.
  * @param code The configuration for the session state.
