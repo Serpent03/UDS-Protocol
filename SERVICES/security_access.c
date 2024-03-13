@@ -124,6 +124,14 @@ bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   }
   if (rx->data[0] % 2 != 0) {
     switch(rx->data[0]) {
+      case RQST_LV_1:
+        break;
+      case RQST_LV_3:
+        break;
+      case RQST_LV_5:
+        break;
+      case RQST_LV_7:
+        break;
       default:
         set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
         return false;
