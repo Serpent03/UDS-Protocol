@@ -8,6 +8,5 @@ bool handle_tester_present(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (rx->dataLength == 0) {
     return true;
   }
-  insertIntoArray(resp_data, rx->data[0], idx);
   return true;
 }

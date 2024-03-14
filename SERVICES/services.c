@@ -10,6 +10,11 @@ void set_failure(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, enum NEG_RESPONS
   *idx = 2;
 }
 
+/** 
+ * @todo switch to a struct based function caller instead of switch. 
+ * @todo add in security level restrictions before entering a function.
+ */
+
 UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
   UDS_Packet *tx; 
   uInt8 response_code = 0x00;
