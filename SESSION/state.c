@@ -43,4 +43,5 @@ void state_initialize() {
   memset(DEVICE_STATE, 0, 3);
   set_state(STATE_DIAGNOSTIC_SESSION, 0x1); /* by default the program starts in the default diagnostic session */
   set_state(STATE_SECURITY_SERVICE, 0x0);
+  initialize_security_tables(); /* Initialize the security table with the SEED/KEY values. */
 }

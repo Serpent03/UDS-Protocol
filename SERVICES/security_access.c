@@ -3,6 +3,9 @@
 #include "../SESSION/timing.h"
 #include "../UDS/UDS.h"
 #include "../UTILS/utils.h"
+#include <string.h>
+
+#define SEED_SIZE 8
 
 enum {
   RQST_LV_1 = 0x1,
@@ -11,14 +14,40 @@ enum {
   RQST_LV_7 = 0x7
 };
 
-uInt8 SEED[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-uInt8 KEY[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+typedef struct SECURITY_SETTINGS {
+  uInt8 SEED[SEED_SIZE];
+  uInt8 KEY[SEED_SIZE];
+} SECURITY_SETTINGS;
+
+SECURITY_SETTINGS security_table[4];
+uInt8 SEED_1[SEED_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8};
+uInt8 SEED_3[SEED_SIZE] = {11, 12, 13, 14, 15, 16, 17, 18};
+uInt8 SEED_5[SEED_SIZE] = {21, 22, 23, 24, 25, 26, 27, 28};
+uInt8 SEED_7[SEED_SIZE] = {31, 32, 33, 34, 35, 36, 37, 38};
+
+uInt8 KEY_1[SEED_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8};
+uInt8 KEY_3[SEED_SIZE] = {11, 12, 13, 14, 15, 16, 17, 18};
+uInt8 KEY_5[SEED_SIZE] = {21, 22, 23, 24, 25, 26, 27, 28};
+uInt8 KEY_7[SEED_SIZE] = {31, 32, 33, 34, 35, 36, 37, 38};
+
+uInt8 SEED[SEED_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8};
+uInt8 KEY[SEED_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8};
+
+void initialize_security_tables() {
+  memcpy(&security_table[0].SEED[0], SEED_1, SEED_SIZE);
+  memcpy(&security_table[1].SEED[0], SEED_3, SEED_SIZE);
+  memcpy(&security_table[2].SEED[0], SEED_3, SEED_SIZE);
+  memcpy(&security_table[3].SEED[0], SEED_3, SEED_SIZE);
+
+  memcpy(&security_table[0].KEY[0], KEY_1, SEED_SIZE);
+  memcpy(&security_table[1].KEY[0], KEY_3, SEED_SIZE);
+  memcpy(&security_table[2].KEY[0], KEY_3, SEED_SIZE);
+  memcpy(&security_table[3].KEY[0], KEY_3, SEED_SIZE);
+}
 
 /**
  * @todo implement seed generation function
  * @todo implement seed validation function
- * @todo implement negative seed response timeout
- * @todo extended diagnostic session/programming session before security access.
  */
 
 /**
@@ -38,19 +67,21 @@ uInt8 KEY[8] = {1, 2, 3, 4, 5, 6, 7, 8};
  * The state enters request timeout when exceeding 3 tries.
  */
 
-void seed_generation(uInt8 *resp_data, uInt16 *idx) {
+void seed_generation(uInt8 *resp_data, uInt16 *idx, uInt8 request_level) {
   /* STUB */
+  uInt8 n = (request_level - 1) / 2;
   for (uInt8 i = 0; i < 8; i++) {
-    insertIntoArray(resp_data, SEED[i], idx);
+    insertIntoArray(resp_data, security_table[n].SEED[i], idx);
   }
 }
 
-bool seed_validation(uInt8 *client_key) {
+bool seed_validation(uInt8 *client_key, uInt8 request_level) {
   /* STUB */
+  uInt8 n = (request_level - 1) / 2; /* Reduce odd numbers to a linear map: 0=1, 1=3, 2=5, 3=7 */
   for (uInt8 i = 0; i < 8; i++) {
-    printf("%d == %d\n", client_key[i], KEY[i]);
+    printf("%d == %d\n", client_key[i], security_table[n].KEY[i]);
   }
-  return true;
+  return memcmp(client_key, &security_table[n].KEY, sizeof(SEED)) == 0;
 }
 
 bool handle_failure(bool result) {
@@ -74,6 +105,8 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
 
   /* Set the security call, for accurate time exhaustion limits. */
   set_last_security_call();
+  printf("CURRENT SEC LEVEL: %02xh\n", current_security_level);
+  printf("REQUEST SEC LEVEL: %02xh\n", request_security_level);
 
   if (current_security_level == 0xFF) {
     /* Currently in timeout delay */
@@ -83,7 +116,7 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (is_requesting_seed) {
     if (request_security_level == current_security_level + 1) {
       /* Return the seed. */
-      seed_generation(resp_data, idx);
+      seed_generation(resp_data, idx, request_security_level);
       set_state(STATE_SECURITY_SERVICE, current_security_level + 1);
       return true;
     } else if (request_security_level < current_security_level) {
@@ -95,7 +128,7 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   } else {
     /* Tester is trying to validate his key against our secret key now. */
     uInt8 *client_key = &rx->data[1]; /* point to the data starting after the SFB. */
-    if (seed_validation(client_key) && request_security_level == current_security_level + 1) {
+    if (seed_validation(client_key, request_security_level) && request_security_level == current_security_level + 1) {
       set_state(STATE_SECURITY_SERVICE, current_security_level + 1);
       return true;
     } else {

@@ -19,6 +19,7 @@ enum STATE_CODES {
 #define SECURITY_REQUEST_TIMEOUT 10000
 #define SECURITY_REQUEST_MAX_TRY 3
 
+
 /**
  * @brief Sets the last communication with the client to the current time.
  * By design, it is called every time the service_handler() in '/SERVICES/services.h' fires, 
@@ -64,3 +65,11 @@ void update_state();
  * @return void.
  */
 void state_initialize();
+
+/**
+ * @brief Initialize the security tables present inside the security access wrapper function.
+ * This function is defined here for the purpose of convenience so as to not clutter up the services.h header file.
+ * The C code for this exists in the *security access wrapper function*.
+ * @return void.
+ */
+extern void initialize_security_tables();

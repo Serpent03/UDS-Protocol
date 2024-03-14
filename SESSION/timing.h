@@ -13,12 +13,12 @@
 /** @todo Check these values to be as least as possible. */
 enum ISO_TP_TIME_LIMITS {
   ISOTP_N_As = 1000,
-  ISOTP_N_Bs = 10000,
+  ISOTP_N_Bs = 1000,
   ISOTP_N_Cs = 500,
 
-  ISOTP_N_Ar = 100000,
+  ISOTP_N_Ar = 1000,
   ISOTP_N_Br = 1000,
-  ISOTP_N_Cr = 110545,
+  ISOTP_N_Cr = 5000,
 
   ISOTP_P2 = 25,
   ISOTP_P2_EXT = 2000
