@@ -10,6 +10,8 @@
 typedef struct service_functions {
   uInt8 SID;
   bool (*callback_function)(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
+  bool (*security_check)(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, uInt8 dgSess, uInt8 secAccess);
+  uInt8 minDataLength;
   uInt8 diag_sess;
   uInt8 security_level;
 } service_functions;
@@ -81,6 +83,17 @@ bool handle_ecu_reset(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
  * @return True if the operation was successful.
  */
 bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
+
+/**
+ * @brief Security check for the security access function.
+ * @param rx The UDS packet to process.
+ * @param resp_data The returning response data.
+ * @param idx The length of the response data.
+ * @param dgSess The required diagnostic session to be in.
+ * @param secAccess The required security level to be in before executing the function.
+ * @return True if the security check was passed.
+ */
+bool security_check_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, uInt8 dgSess, uInt8 secAccess);
 
 /**
  * @brief Wrapper function for the SID 0x3E, which is the tester present.

@@ -14,21 +14,26 @@ void set_failure(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, enum NEG_RESPONS
 void init_service_table() {
   service_table[0].SID = SID_DIAGNOSTIC_SESS_CNTL;
   service_table[0].callback_function = handle_diag_sess_cntl;
+  service_table[0].security_check = NULL;
+  service_table[0].minDataLength = 1;
   service_table[0].security_level = 0x0;
   service_table[0].diag_sess = 0x1;
 
   service_table[1].SID = SID_ECU_RESET;
   service_table[1].callback_function = handle_ecu_reset;
+  service_table[1].security_check = NULL;
   service_table[1].security_level = 0x0;
   service_table[1].diag_sess = 0x1;
 
   service_table[2].SID = SID_TESTER_PRESENT;
   service_table[2].callback_function = handle_tester_present;
+  service_table[2].security_check = NULL;
   service_table[2].security_level = 0x0;
   service_table[2].diag_sess = 0x1;
 
   service_table[3].SID = SID_SECURITY_ACCESS_SERVICE;
   service_table[3].callback_function = handle_security_access;
+  service_table[3].security_check = security_check_security_access;
   service_table[3].security_level = 0x0;
   service_table[3].diag_sess = 0x2 | 0x3; /* programming/extended diagnostic session */
 }
@@ -44,48 +49,58 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
 
   for (int i = 0; i < NUM_SERVICES; i++) {
     if (rx->SID == service_table[i].SID) {
+      if (service_table[i].security_check) {
+        if (!service_table[i].security_check(rx, resp_data, &idx, service_table[i].diag_sess, service_table[i].security_level)) {
+          response_code = NRC_NEGATIVE_RESPONSE;
+        }
+      }
+      if (!service_table[i].callback_function(rx, resp_data, &idx)) {
+        response_code = NRC_NEGATIVE_RESPONSE;
+      } else {
+        response_code = rx->SID + 0x40;
+      }
       /** @todo add in value checkers and callback function */
     }
   }
 
-  switch (rx->SID) {
-    case SID_STATE_DEBUG:
-      handle_debug(rx, resp_data, &idx);
-      response_code = 0xFF;
-      break;
-    case SID_DIAGNOSTIC_SESS_CNTL:
-      if (!handle_diag_sess_cntl(rx, resp_data, &idx)) {
-        response_code = NRC_NEGATIVE_RESPONSE;
-      } else {
-        response_code = rx->SID + 0x40;
-      }
-      break;
-    case SID_ECU_RESET:
-      if (!handle_ecu_reset(rx, resp_data, &idx)) {
-        response_code = NRC_NEGATIVE_RESPONSE;
-      } else {
-        response_code = rx->SID + 0x40;
-      }
-      break;
-    case SID_TESTER_PRESENT:
-      if (!handle_tester_present(rx, resp_data, &idx)) {
-        response_code = NRC_NEGATIVE_RESPONSE;
-      } else {
-        response_code = rx->SID + 0x40;
-      }
-      break;
-    case SID_SECURITY_ACCESS_SERVICE:
-      if (!handle_security_access(rx, resp_data, &idx)) {
-        response_code = NRC_NEGATIVE_RESPONSE;
-      } else {
-        response_code = rx->SID + 0x40;
-      }
-      break;
-    default:
-      response_code = 0x00;
-      idx = 0;
-      break;
-  }
+  // switch (rx->SID) {
+  //   case SID_STATE_DEBUG:
+  //     handle_debug(rx, resp_data, &idx);
+  //     response_code = 0xFF;
+  //     break;
+  //   case SID_DIAGNOSTIC_SESS_CNTL:
+  //     if (!handle_diag_sess_cntl(rx, resp_data, &idx)) {
+  //       response_code = NRC_NEGATIVE_RESPONSE;
+  //     } else {
+  //       response_code = rx->SID + 0x40;
+  //     }
+  //     break;
+  //   case SID_ECU_RESET:
+  //     if (!handle_ecu_reset(rx, resp_data, &idx)) {
+  //       response_code = NRC_NEGATIVE_RESPONSE;
+  //     } else {
+  //       response_code = rx->SID + 0x40;
+  //     }
+  //     break;
+  //   case SID_TESTER_PRESENT:
+  //     if (!handle_tester_present(rx, resp_data, &idx)) {
+  //       response_code = NRC_NEGATIVE_RESPONSE;
+  //     } else {
+  //       response_code = rx->SID + 0x40;
+  //     }
+  //     break;
+  //   case SID_SECURITY_ACCESS_SERVICE:
+  //     if (!handle_security_access(rx, resp_data, &idx)) {
+  //       response_code = NRC_NEGATIVE_RESPONSE;
+  //     } else {
+  //       response_code = rx->SID + 0x40;
+  //     }
+  //     break;
+  //   default:
+  //     response_code = 0x00;
+  //     idx = 0;
+  //     break;
+  // }
   tx = generate_UDS_packet(response_code, resp_data, idx);
   return tx;
 }

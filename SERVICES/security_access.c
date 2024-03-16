@@ -141,6 +141,14 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
 
 /** @todo fix negative response mechanism(security request timeout) */
 
+bool security_check_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, uInt8 dgSess, uInt8 secAcess) {
+  if (get_state(STATE_DIAGNOSTIC_SESSION) < 0x2) {
+    set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
+    return false;
+  }
+  return true;
+}
+
 bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (rx->dataLength < 1) {
     set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
@@ -149,10 +157,6 @@ bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   if (rx->data[0] % 2 == 0 && rx->dataLength < 2) {
     /* Assuming that the SFB + SEED/KEY will be atleast 2 bytes in length. */
     set_failure(rx, resp_data, idx, NRC_INCORRECT_MESSAGE_LENGTH);
-    return false;
-  }
-  if (get_state(STATE_DIAGNOSTIC_SESSION) < 0x2) {
-    set_failure(rx, resp_data, idx, NRC_SERVICE_NOT_SUPPORTED);
     return false;
   }
   if (rx->data[0] % 2 != 0) {
