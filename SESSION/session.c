@@ -82,6 +82,7 @@ void Server_Init() {
   idle = true;
   shutdown = false;
 
+  init_service_table();
   state_initialize();
 }
 

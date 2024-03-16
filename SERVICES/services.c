@@ -11,12 +11,6 @@ void set_failure(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, enum NEG_RESPONS
   *idx = 2;
 }
 
-/** 
- * @todo switch to a struct based function caller instead of switch. 
- * @todo add in security level restrictions before entering a function.
- */
-
-
 void init_service_table() {
   service_table[0].SID = SID_DIAGNOSTIC_SESS_CNTL;
   service_table[0].callback_function = handle_diag_sess_cntl;
@@ -47,6 +41,12 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
   /* We call this to establish the fact that the last communication happened. */
   /* because this function can only be accessed in the case of a valid communication. */
   set_last_client_call();
+
+  for (int i = 0; i < NUM_SERVICES; i++) {
+    if (rx->SID == service_table[i].SID) {
+      /** @todo add in value checkers and callback function */
+    }
+  }
 
   switch (rx->SID) {
     case SID_STATE_DEBUG:
