@@ -3,7 +3,7 @@
 #include "../common.h"
 #include "../UDS/UDS.h"
 
-#define NUM_SERVICES 5
+#define NUM_SERVICES 6
 
 /* ====== STRUCTURES ====== */
   
@@ -11,7 +11,6 @@ typedef struct service_functions {
   uInt8 SID;
   bool (*callback_function)(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
   bool (*security_check)(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, uInt8 dgSess, uInt8 secAccess);
-  uInt8 minDataLength;
   uInt8 diag_sess;
   uInt8 security_level;
 } service_functions;
@@ -58,44 +57,6 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx);
 void handle_debug(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
 
 /**
- * @brief Wrapper function for the SID 0x10, which is the diagnostic session control.
- * @param rx The UDS packet to process.
- * @param resp_data The returning response data to be edited.
- * @param idx The length of the the response data.
- * @return True if the operation was successful.
- */
-bool handle_diag_sess_cntl(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
-
-/**
- * @brief Wrapper function for the SID 0x11, which is the ECU reset.
- * @param rx The UDS packet to process.
- * @param resp_data The returning response data.
- * @param idx The length of the response data.
- * @return True if the operation was successful.
- */
-bool handle_ecu_reset(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
-
-/**
- * @brief Wrapper function for the SID 0x27, which is the security access service.
- * @param rx The UDS packet to process.
- * @param resp_data The returning response data.
- * @param idx The length of the response data.
- * @return True if the operation was successful.
- */
-bool handle_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
-
-/**
- * @brief Security check for the security access function.
- * @param rx The UDS packet to process.
- * @param resp_data The returning response data.
- * @param idx The length of the response data.
- * @param dgSess The required diagnostic session to be in.
- * @param secAccess The required security level to be in before executing the function.
- * @return True if the security check was passed.
- */
-bool security_check_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, uInt8 dgSess, uInt8 secAccess);
-
-/**
  * @brief Wrapper function for the SID 0x3E, which is the tester present.
  * @param rx The UDS packet to process.
  * @param resp_data The returning response data.
@@ -103,7 +64,3 @@ bool security_check_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *id
  * @return True if the operation was successful.
  */
 bool handle_tester_present(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx);
-
-
-
-

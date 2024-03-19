@@ -1,8 +1,9 @@
-#include "services.h"
-#include "../SESSION/state.h"
-#include "../SESSION/timing.h"
-#include "../UDS/UDS.h"
-#include "../UTILS/utils.h"
+#include "../services.h"
+#include "../../SESSION/state.h"
+#include "../../SESSION/timing.h"
+#include "../../UDS/UDS.h"
+#include "../../UTILS/utils.h"
+#include "security_access.h"
 #include <string.h>
 
 #define SEED_SIZE 8
@@ -138,8 +139,6 @@ bool handle_access_escalation(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx) {
   }
   return false; /* All successful operations must be returned inside the if/else scope. */ 
 }
-
-/** @todo fix negative response mechanism(security request timeout) */
 
 bool security_check_security_access(UDS_Packet *rx, uInt8 *resp_data, uInt16 *idx, uInt8 dgSess, uInt8 secAcess) {
   if (get_state(STATE_DIAGNOSTIC_SESSION) < 0x2) {

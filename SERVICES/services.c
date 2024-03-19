@@ -1,5 +1,9 @@
 #include "./services.h"
 #include "../SESSION/state.h"
+#include "READ_DATA_BY_ID/read_data_by_id.h"
+#include "ECU_RESET/ecu_reset.h"
+#include "DIAG_SESS_CNTL/diag_sess_cntl.h"
+#include "SECURITY_ACCESS/security_access.h"
 
 uInt8 resp_data[4096];
 service_functions service_table[NUM_SERVICES];
@@ -15,7 +19,6 @@ void init_service_table() {
   service_table[0].SID = SID_DIAGNOSTIC_SESS_CNTL;
   service_table[0].callback_function = handle_diag_sess_cntl;
   service_table[0].security_check = NULL;
-  service_table[0].minDataLength = 1;
   service_table[0].security_level = 0x0;
   service_table[0].diag_sess = 0x1;
 
@@ -36,6 +39,12 @@ void init_service_table() {
   service_table[3].security_check = security_check_security_access;
   service_table[3].security_level = 0x0;
   service_table[3].diag_sess = 0x2 | 0x3; /* programming/extended diagnostic session */
+
+  service_table[4].SID = SID_READ_DATA_BY_IDENT;
+  service_table[4].callback_function = handle_read_data_by_id;
+  service_table[4].security_check = NULL;
+  service_table[4].security_level = 0x0; /** @todo add the security level check for RDID */
+  service_table[4].diag_sess = 0x1;
 }
 
 UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
@@ -52,6 +61,7 @@ UDS_Packet* service_handler(UDS_Packet *rx, bool *silenceTx) {
       if (service_table[i].security_check) {
         if (!service_table[i].security_check(rx, resp_data, &idx, service_table[i].diag_sess, service_table[i].security_level)) {
           response_code = NRC_NEGATIVE_RESPONSE;
+          break;
         }
       }
       if (!service_table[i].callback_function(rx, resp_data, &idx)) {
