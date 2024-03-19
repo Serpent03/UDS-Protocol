@@ -1,10 +1,11 @@
-sources = main.c UTILS/*.c SERVICES/*.c SESSION/*.c QUEUE/*.c ISOTP/*.c BUS/*.c UDS/*.c
-test_sources = */*.c
+sources = main.c BUS/*.c ISOTP/*.c QUEUE/*.c SERVICES/*.c SESSION/*.c UDS/*.c UTILS/*.c
+services = SERVICES/**/*.c
+test_sources = */*.c **/**/*.c
 cc = gcc
 ccflags = -Wall
 
 main: $(sources)
-	$(cc) -o main $(sources) $(ccflags)
+	$(cc) -o main $(sources) $(services) $(ccflags)
 	$(cc) -o test $(test_sources) $(ccflags)
 
 clean:
